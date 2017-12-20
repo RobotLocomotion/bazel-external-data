@@ -1,0 +1,22 @@
+imports = ["../.."]
+
+py_library(
+    name = "core",
+    srcs = [
+        "__init__.py",
+        "mock.py",
+    ],
+    deps = [
+        "//src/bazel_external_data:core",
+    ],
+    imports = imports,
+)
+
+py_library(
+    name = "backends",
+    deps = [
+        ":core",
+    ],
+    imports = imports,
+    visibility = ["//src/bazel_external_data:__subpackages__"],
+)

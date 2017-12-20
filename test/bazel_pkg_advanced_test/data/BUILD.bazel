@@ -1,0 +1,29 @@
+load("//tools:external_data.bzl",
+    "external_data",
+    "external_data_group",
+    "get_original_files",
+)
+
+package(default_visibility = ["//visibility:public"])
+
+external_data(
+    file = "basic.bin",
+)
+
+external_data_group(
+    name = "glob",
+    files = get_original_files(glob(['glob_*.bin.sha512'])),
+)
+
+external_data(
+    file = "subdir/extra.bin",
+)
+
+filegroup(
+    name = "data",
+    srcs = [
+        ":basic.bin",
+        ":glob",
+        ":subdir/extra.bin",
+    ],
+)

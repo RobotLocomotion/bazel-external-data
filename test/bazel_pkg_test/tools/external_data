@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e -u
+# Proxy to use Bazel binary, but with access to PWD.
+workspace_dir=$(cd $(dirname $0)/.. && pwd)
+bin_dir=${workspace_dir}/bazel-bin/external/bazel_external_data_pkg
+bin=${bin_dir}/cli
+# Build the binary if it does not exist.
+if [[ ! -f ${bin} ]]; then
+    bazel build @bazel_external_data_pkg//:cli
+fi
+# Execute.
+${bin} "$@"

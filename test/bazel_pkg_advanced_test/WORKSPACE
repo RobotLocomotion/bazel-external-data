@@ -1,0 +1,8 @@
+workspace(name = "bazel_pkg_advanced_test")
+
+load("//tools:path.bzl", "dirname")
+
+local_repository(
+    name = "bazel_external_data_pkg",
+    path = dirname(dirname(__workspace_dir__)),
+)
