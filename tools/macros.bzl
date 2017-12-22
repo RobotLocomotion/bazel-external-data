@@ -40,7 +40,8 @@ def _get_cli_base_args(filepath, settings):
     # that a file could consumed by a downstream Bazel project.
     # (Otherwise, PWD will point to downstream project, which will make a
     # conflict.)
-    args.append("--project_root_guess=$(location {})".format(settings['cli_sentinel']))
+    args.append("--project_root_guess=$(location {})"
+                .format(settings['cli_sentinel']))
     # Extra Arguments (for project settings).
     cli_extra_args = settings['cli_extra_args']
     if cli_extra_args:
@@ -48,8 +49,11 @@ def _get_cli_base_args(filepath, settings):
     return args
 
 
-def external_data(file, mode='normal', visibility=None,
-                  settings=SETTINGS_DEFAULT):
+def external_data(
+        file,
+        mode='normal',
+        settings=SETTINGS_DEFAULT,
+        visibility=None):
     """Defines an external data file.
 
     @param file
@@ -59,21 +63,23 @@ def external_data(file, mode='normal', visibility=None,
         'devel' - Use local workspace (for development).
         'no_cache' - Download the file, do not use the cache.
     @param settings
-        Settings for the given repository (or even individual target).
-        @see SETTINGS_DEFAULT.
+        Settings for target. See `SETTINGS_DEFAULT` for the each setting and
+        its purpose.
     """
     # Overlay.
     # TODO: Check for invalid settings?
     settings = SETTINGS_DEFAULT + settings
 
     if mode == 'devel':
-        # TODO(eric.cousineau): It'd be nice if there is a way to (a) check if there is
-        # a `*.sha512` file, and if so, (b) check the hash of the input file.
+        # TODO(eric.cousineau): It'd be nice if there is a way to (a) check if
+        # there is a `*.sha512` file, and if so, (b) check the hash of the
+        # input file.
         if settings['enable_warn']:
             # TODO(eric.cousineau): Print full location of given file?
             print("\nexternal_data(file = '{}', mode = 'devel'):".format(file) +
                   "\n  Using local workspace file in development mode." +
-                  "\n  Please upload this file and commit the *{} file.".format(_HASH_SUFFIX))
+                  "\n  Please upload this file and commit the *{} file."
+                  .format(_HASH_SUFFIX))
         native.exports_files(
             srcs = [file],
             visibility = visibility,
@@ -137,8 +143,8 @@ def external_data_group(
         files,
         files_devel = [],
         mode='normal',
-        visibility=None,
-        settings=SETTINGS_DEFAULT):
+        settings=SETTINGS_DEFAULT,
+        visibility=None):
     """Defines a group of external data files. """
 
     # Overlay.

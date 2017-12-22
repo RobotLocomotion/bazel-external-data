@@ -7,15 +7,14 @@ To enable `bazel_external_data` in a Project:
 1. Add the project configuration (see [Setup](./setup.md)) to the project, and the root package configuration.
 2. Add `bazel_external_data` in your `WORKSPACE`.
 
-    As an example:
+    As an example (replacing `${GIT_SHA}` and `${ARCHIVE_SHA256}`):
 
         http_archive(
             name = "bazel_external_data_pkg",
-            url = "https://github.com/EricCousineau-TRI/bazel_external_data/archive/ce71398ac319cf4dedcf3eed3ae5c2c25e4eb1b4.zip",
-            sha256 = "9f3ade94ee039f99074809da920d55fe7202e01e4861e9e76f0a5e0c7db39eb0",
-            strip_prefix = "bazel_external_data-ce71398ac319cf4dedcf3eed3ae5c2c25e4eb1b4",
+            url = "https://github.com/RobotLocomotion/bazel-external-data/archive/${GIT_SHA}.zip",
+            sha256 = "${ARCHIVE_SHA256}",
+            strip_prefix = "bazel_external_data-${GIT_SHA}",
         )
-
 
 2. Expose the sentinel so that the CLI script can track things correctly when being run from within Bazel.
 
@@ -29,11 +28,11 @@ To enable `bazel_external_data` in a Project:
 
     Ensure that this sentinel is visible as `//:external_data_sentinel`.
 
-3. Under `${workspace}/tools`:
+3. In the directory `${workspace}/tools`:
 
-    1. Add `BUILD` (to enable it as a package).
+    1. Add `./BUILD.bazel` (which makes the directoy a Bazel package).
 
-    2. Add `external_data.bzl`:
+    2. Add `./external_data.bzl`:
 
             # Pass through.
             load("@bazel_external_data_pkg//tools:macros.bzl",
@@ -67,8 +66,6 @@ test.
 
         load("//tools:external_data.bzl",
             "external_data",
-            "external_data_group",
-            "get_original_files",
         )
 
 1. Add a Bazel target for this file indicating that it's external data and that you're in the process of developing the file. In `:/data/BUILD`:
@@ -99,7 +96,7 @@ test.
 1. Run the `upload` script given the absolute path of the desired file:
 
         cd data
-        touch dragon.obj
+        # Edit ./dragon.obj...
         ../tools/external_data upload ./dragon.obj
 
     If the file does not already exist on the desired server, this will upload the file. This will also update `dragon.obj.sha512` to reflect that the server-side information.
@@ -116,8 +113,11 @@ test.
 
         bazel build :dragon.obj
 
-    This should have downloaded, cached, and exposed this file in Bazel's workspace.
-    Now run `://test:inspect_dragon` (which should use Bazel's cached version) and ensure this works.
+    This should have downloaded, cached, and exposed this file in Bazel's workspace. Now run `://test:inspect_dragon` (which should use Bazel's cached version) and ensure this works.
+
+    Bazel should have placed its symlink of the file in `bazel-out/local-fastbuild/genfiles/data/basic.bin`. If you want to Edit the file and ensure that Bazel takes these changes, see below.
+
+    If you want to be able to run a test from your workspace, using something like `./bazel-bin/my_package/my_target`, you must download the file (or symlink) in your workspace to ensure it's accessible. See further below for more information about this.
 
 4. Now commit the `*.sha512` file in Git.
 
@@ -126,13 +126,12 @@ test.
 
 Let's say you've removed `dragon.obj` from `:/data`, but a month later you wish to revise it. To update the file:
 
-1. Delete and then download the corresponding hash file:
+1. Re-download the object (using `-f | --force` to remove the existing file):
 
         cd data
-        rm -f dragon.obj
-        ../tools/external_data download ./dragon.obj.sha512
+        ../tools/external_data download -f ./dragon.obj.sha512
 
-    **NOTE**: You may also run `../tools/external_data download ./dragon.obj`. It will recognize the intended object.
+    **NOTE**: You may also run `../tools/external_data download -f ./dragon.obj`. It will recognize the intended object.
 
 2. Change `:/data/BUILD` back to development mode:
 
@@ -152,6 +151,11 @@ For groups of large data files, you could specify individual Bazel `external_dat
 However, if you have a large set of `*.${ext}.sha512` files, it may be easier to use the workspace's directory structure to glob these files. (You cannot reliably use `*.${ext}` without the suffix because these files would not exist normally.)
 
 As an example in `:/data`:
+
+    load("//tools:external_data.bzl",
+        "external_data_group",
+        "get_original_files",
+    )
 
     external_data_group(
         name = "meshes",
@@ -200,7 +204,7 @@ This means that Bazel will automatically switch to using your local file, rather
 
 If you wish to download *all* files of a given extension at the specified revision under a certain directory, you may use `find`. For example:
 
-    find . -name '*.obj.sha512' | ./tools/external_data:download
+    find . -name '*.obj.sha512' | ./tools/external_data download
 
 For each `${file}.sha512` that is found, the file will be downloaded to `${file}`.
 
