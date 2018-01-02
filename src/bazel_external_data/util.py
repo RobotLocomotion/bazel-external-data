@@ -72,7 +72,7 @@ def find_file_sentinel(start_dir, sentinel_file,
     """Finds a sentinel given a check. """
     cur_dir = start_dir
     assert len(cur_dir) > 0
-    for i in xrange(max_depth):
+    for _ in xrange(max_depth):
         assert os.path.isdir(cur_dir)
         test_path = os.path.join(cur_dir, sentinel_file)
         if sentinel_check(test_path):

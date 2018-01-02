@@ -1,3 +1,5 @@
+# -*- python -*-
+
 sh_test(
     name = "workflows_test",
     srcs = ["workflows_test.sh"],

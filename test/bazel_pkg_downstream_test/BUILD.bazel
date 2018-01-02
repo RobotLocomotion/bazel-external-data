@@ -1,3 +1,5 @@
+# -*- python -*-
+
 py_test(
     name = "test_basics",
     srcs = ["test_basics.py"],

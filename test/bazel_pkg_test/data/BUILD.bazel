@@ -1,3 +1,5 @@
+# -*- python -*-
+
 load("//tools:external_data.bzl",
     "external_data",
 )

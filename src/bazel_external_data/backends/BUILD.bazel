@@ -1,3 +1,7 @@
+# -*- python -*-
+
+# Use relative package path, as `py_library` does not like absolute package
+# paths. This ensures that `//src` is added to `PYTHONPATH`.
 imports = ["../.."]
 
 py_library(

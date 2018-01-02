@@ -1,3 +1,9 @@
+# -*- python -*-
+
+# Use relative package path, as `py_library` does not like absolute package
+# paths. This ensures that `//src` is added to `PYTHONPATH`.
+imports = [".."]
+
 # @note 'core' has no backends present.
 py_library(
     name = "core",
@@ -7,7 +13,7 @@ py_library(
         "util.py",
         "hashes.py",
     ],
-    imports = [".."],
+    imports = imports,
     visibility = ["//visibility:public"],
 )
 
@@ -22,7 +28,7 @@ py_library(
         ":core",
         "//src/bazel_external_data/backends",
     ],
-    imports = [".."],
+    imports = imports,
     visibility = ["//visibility:public"],
 )
 

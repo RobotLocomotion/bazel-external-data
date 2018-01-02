@@ -1,3 +1,5 @@
+# -*- python -*-
+
 # Do not use user's configuration.
 exports_files(
     srcs = [

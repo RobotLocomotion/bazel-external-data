@@ -12,8 +12,8 @@ import copy
 from bazel_external_data import util
 
 
-def guess_start_dir(filepath):
-    """Returns the directory of a file, or the directory if passed directly."""
+def _resolve_dir(filepath):
+    # Returns the directory of a file, or the directory if passed directly.
     if os.path.isdir(filepath):
         return filepath
     else:
@@ -37,7 +37,7 @@ def find_project_root(guess_filepath, sentinel, project_name):
         else:
             return False
 
-    start_dir = guess_start_dir(guess_filepath)
+    start_dir = _resolve_dir(guess_filepath)
     root_file = util.find_file_sentinel(start_dir, sentinel, sentinel_check)
     if root_file is None:
         hint = ""
