@@ -1,0 +1,45 @@
+# -*- python -*-
+
+package(default_visibility = ["//visibility:public"])
+
+alias(
+    name = "core",
+    actual = "//src/bazel_external_data:core",
+)
+
+alias(
+    name = "cli.py",
+    actual = "//src/bazel_external_data:cli.py",
+)
+
+py_library(
+    name = "cli_deps",
+    deps = [
+        "//src/bazel_external_data:core",
+        "//src/bazel_external_data:cli_base",
+    ],
+)
+
+# Declared here to permit easier access to `cli` from external projects.
+py_binary(
+    name = "cli",
+    srcs = [
+        "//src/bazel_external_data:cli.py",
+    ],
+    deps = [
+        ":cli_deps",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Expose this package's main bits to be consumed via a test.
+filegroup(
+    name = "root_data",
+    srcs = [
+        "src",
+        "tools",
+        "WORKSPACE",
+        "BUILD.bazel"
+    ],
+    visibility = ["//test:__subpackages__"],
+)

@@ -1,0 +1,21 @@
+# -*- python -*-
+
+filegroup(
+    name = "external_data_sentinel",
+    srcs = [":.external_data.yml"],
+    visibility=["//visibility:public"],
+)
+
+py_test(
+    name = "test_basics",
+    srcs = ["test_basics.py"],
+    deps = [
+        "@bazel_external_data_pkg//:core",
+    ],
+    data = [
+        "//data",
+        "mock",  # Directory.
+    ],
+    size = "small",
+    visibility = ["//visibility:public"],
+)

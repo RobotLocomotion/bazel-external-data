@@ -1,0 +1,11 @@
+# -*- python -*-
+
+py_test(
+    name = "test_basics",
+    srcs = ["test_basics.py"],
+    data = [
+        "@bazel_pkg_test//data",
+    ],
+    size = "small",
+    visibility = ["//visibility:public"],
+)

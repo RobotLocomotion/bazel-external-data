@@ -1,0 +1,22 @@
+# This file should live at: ${package_dir}/.external_data.yml
+
+# This is a package's configuration file. This is used to detect package
+# boundaries (similar to Bazel's `BUILD{,.bazel}` files).
+
+# The remote for all child folders, unless changed.
+# Change this to "devel" if you are uploading files to this remote.
+
+remote: master
+
+remotes:
+    master:
+        # Backend used for storing files.
+        backend: girder
+        url: https://girder.example.com
+        folder_path: /collection/name/folder
+
+    devel:
+        overlay: master
+        backend: girder
+        url: https://girder.example.com
+        folder_path: /collection/name/folder
