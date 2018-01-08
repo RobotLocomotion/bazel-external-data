@@ -5,7 +5,8 @@ import stat
 from bazel_external_data import util, config_helpers, hashes
 
 PROJECT_CONFIG_FILE = ".external_data.yml"
-USER_CONFIG_FILE_DEFAULT = os.path.expanduser("~/.config/bazel_external_data/config.yml")
+USER_CONFIG_FILE_DEFAULT = os.path.expanduser(
+    "~/.config/bazel_external_data/config.yml")
 USER_CONFIG_DEFAULT = {
     "core": {
         "cache_dir": os.path.expanduser("~/.cache/bazel_external_data"),

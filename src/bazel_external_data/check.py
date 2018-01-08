@@ -1,13 +1,14 @@
 """
 @file
-Allows uploading data file to a remote.
+Checks the integrity of a file or set of files for this project, ensuring these
+files are available on the remote for others to download.
 """
 
 import os
 import sys
 import yaml
 
-from bazel_external_data import core, util
+from bazel_external_data.util import eprint
 
 
 def add_arguments(parser):
@@ -24,8 +25,8 @@ def run(args, project):
                 action()
             except RuntimeError as e:
                 good = False
-                util.eprint(e)
-                util.eprint("Continuing (--keep_going).")
+                eprint(e)
+                eprint("Continuing (--keep_going).")
         else:
             action()
     return good

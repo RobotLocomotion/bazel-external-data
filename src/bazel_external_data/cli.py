@@ -35,10 +35,13 @@ check.add_arguments(subparsers.add_parser("check"))
 
 args = parser.parse_args()
 
-# Do not allow running under Bazel unless we have a guess for the project root from an input file.
+# Do not allow running under Bazel unless we have a guess for the project root
+# from an input file.
 if in_bazel_runfiles() and not args.project_root_guess:
-    eprint("ERROR: Do not run this command via `bazel run`. Use a wrapper to call the binary.")
-    eprint("  (If you are writing a test in Bazel, ensure that you pass `--project_root_guess=$(location <target>)`.)")
+    eprint("ERROR: Do not run this command via `bazel run`. " +
+           "Use a wrapper to call the binary.")
+    eprint("  (If you are writing a test in Bazel, ensure that " +
+           "you pass `--project_root_guess=$(location <target>)`.)")
     exit(1)
 
 if args.verbose:
@@ -53,8 +56,10 @@ project = load_project(
     project_name=args.project_name)
 
 if args.verbose:
-    yaml.dump({"user_config": project.user.config}, sys.stdout, default_flow_style=False)
-    yaml.dump({"project_config": project.config}, sys.stdout, default_flow_style=False)
+    yaml.dump({"user_config": project.user.config}, sys.stdout,
+              default_flow_style=False)
+    yaml.dump({"project_config": project.config}, sys.stdout,
+              default_flow_style=False)
 
 # Execute command.
 status = False

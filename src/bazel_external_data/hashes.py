@@ -1,8 +1,13 @@
+"""
+@file
+Provides a Hash that can be propagated.
+"""
+
 import hashlib
 import os
 
 
-class HashType(object):
+class _HashType(object):
     def __init__(self, name):
         self.name = name
 
@@ -94,9 +99,9 @@ class Hash(object):
         return out
 
 
-class Sha512(HashType):
+class _Sha512(_HashType):
     def __init__(self):
-        HashType.__init__(self, 'sha512')
+        _HashType.__init__(self, 'sha512')
 
     def do_compute(self, filepath):
         # From girder/plugins/hashsum_download/server/__init__.py
@@ -111,42 +116,4 @@ class Sha512(HashType):
         return digest.hexdigest()
 
 
-sha512 = Sha512()
-
-if __name__ == "__main__":
-    tmp_file = '/tmp/test_hash_file'
-    with open(tmp_file, 'w') as f:
-        f.write('Example contents\n')
-    cur = sha512.compute(tmp_file)
-
-    value_expected = '7f3f25018046549d08c6c9c97808e344aee60071164789a2077a5e34f4a219e45b4f30bc671dc71d2f05d05cec9235a523ebba436254a2b0b3b794f0afd9a7c3'
-    hash_expected = sha512.create(value_expected)
-    str_expected = 'sha512:{}'.format(value_expected)
-
-    assert hash_expected.compare(cur)
-    assert hash_expected == cur
-
-    str_actual = str(cur)
-    assert str_actual == str_expected
-
-    try:
-        cur_bad = sha512.create('blech')
-        cur.compare(cur_bad)
-        assert False
-    except RuntimeError as e:
-        print(e)
-    assert cur != cur_bad
-
-    value_1 = sha512.create('7f3f25018046549d08c6c9c97808e344aee60071164789a2077a5e34f4a219e45b4f30bc671dc71d2f05d05cec9235a523ebba436254a2b0b3b794f0afd9a7c3')
-    value_2 = sha512.create('6f3f25018046549d08c6c9c97808e344aee60071164789a2077a5e34f4a219e45b4f30bc671dc71d2f05d05cec9235a523ebba436254a2b0b3b794f0afd9a7c3')
-    value_2_copy = sha512.create('6f3f25018046549d08c6c9c97808e344aee60071164789a2077a5e34f4a219e45b4f30bc671dc71d2f05d05cec9235a523ebba436254a2b0b3b794f0afd9a7c3')
-    value_3 = sha512.create('5f3f25018046549d08c6c9c97808e344aee60071164789a2077a5e34f4a219e45b4f30bc671dc71d2f05d05cec9235a523ebba436254a2b0b3b794f0afd9a7c3')
-    d = {value_1: 1, value_2: 2}
-    assert value_1 in d
-    assert value_2 in d
-    assert value_2_copy in d
-    assert value_3 not in d
-    assert d[value_1] == 1
-    assert d[value_2] == 2
-
-    print("[ Done ]")
+sha512 = _Sha512()

@@ -1,10 +1,13 @@
-from __future__ import absolute_import, print_function
-import argparse
+"""
+@file
+Downloads a file or a set of files for this project.
+"""
+
 import os
 import sys
 import yaml
 
-from bazel_external_data import core, util, config_helpers
+from bazel_external_data.util import eprint
 
 
 def add_arguments(parser):
@@ -52,8 +55,8 @@ def run(args, project):
                     action()
                 except RuntimeError as e:
                     good = False
-                    util.eprint(e)
-                    util.eprint("Continuing (--keep_going).")
+                    eprint(e)
+                    eprint("Continuing (--keep_going).")
             else:
                 action()
     return good
