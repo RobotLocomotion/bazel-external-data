@@ -5,7 +5,7 @@ load("//:path.bzl", "dirname")
 # <workspace_import name="bazel_pkg_test">
 local_repository(
     name = "bazel_external_data_pkg",
-    path = dirname(dirname(__workspace_dir__)),
+    path = dirname(__workspace_dir__, 3),
 )
 # </workspace_import>  <!-- bazel_pkg_test -->
 

@@ -1,11 +1,40 @@
 # -*- python -*-
+load(":workspace_test.bzl", "workspace_test")
 
-sh_test(
+root_data = "//:root_data"
+
+workspace_test(
     name = "workflows_test",
-    srcs = ["workflows_test.sh"],
+    cmd = "./workflows_test.sh",
+    workspace = ":workspaces/bazel_pkg_advanced_test",
+    data = [root_data],
+)
+
+workspace_test(
+    name = "bazel_pkg_test",
+    workspace = ":workspaces/bazel_pkg_test",
+    data = [root_data],
+)
+
+workspace_test(
+    name = "bazel_pkg_advanced_test",
+    workspace = ":workspaces/bazel_pkg_advanced_test",
+    data = [root_data],
+)
+
+workspace_test(
+    name = "bazel_pkg_downstream_test",
+    workspace = ":workspaces/bazel_pkg_downstream_test",
     data = [
-        # Consume the directory so that we may copy it.
-        ":bazel_pkg_advanced_test",
-        "//:pkg_data",
+        ":workspaces/bazel_pkg_test",
+        root_data,
     ],
+)
+
+# We can import external tests.
+# *However*, we cannot import test suites :(
+alias(
+    name = "imported_simple_test",
+    actual = "@bazel_external_data_test_ignore//:simple_test",
+    testonly = 1,
 )

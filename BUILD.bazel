@@ -34,7 +34,7 @@ py_binary(
 
 # Expose this package's main bits to be consumed via a test.
 filegroup(
-    name = "pkg_data",
+    name = "root_data",
     srcs = [
         "src",
         "tools",
