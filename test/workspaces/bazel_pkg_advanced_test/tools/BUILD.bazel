@@ -1,8 +1,0 @@
-# -*- python -*-
-
-# Do not use user's configuration.
-exports_files(
-    srcs = [
-        "external_data.user.yml",
-    ],
-)

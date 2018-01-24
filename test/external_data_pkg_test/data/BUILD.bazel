@@ -1,0 +1,22 @@
+# -*- python -*-
+
+load("//tools:external_data.bzl",
+    "external_data",
+)
+
+load("@bazel_external_data_pkg//:expose_all_files.bzl", "expose_all_files")
+
+package(default_visibility = ["//visibility:public"])
+
+external_data(
+    file = "basic.bin",
+)
+
+filegroup(
+    name = "data",
+    srcs = [
+        ":basic.bin",
+    ],
+)
+
+expose_all_files()

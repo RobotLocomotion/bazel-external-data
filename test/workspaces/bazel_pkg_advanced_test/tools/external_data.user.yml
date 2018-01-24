@@ -1,4 +1,0 @@
-# Mock configuration for caching to a known folder.
-core:
-  # Do not cache into the common user folder.
-  cache_dir: /tmp/bazel_external_data/test_cache

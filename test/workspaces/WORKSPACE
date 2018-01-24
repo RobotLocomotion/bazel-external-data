@@ -1,3 +1,0 @@
-# Make a workspace so that Bazel will ignore these tests when run with
-# `test ...` from the top-level workspace.
-workspace(name = "bazel_external_data_test_ignore")

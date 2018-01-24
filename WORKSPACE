@@ -2,12 +2,6 @@
 # @ref https://github.com/bazelbuild/bazel/issues/3998
 workspace(name = "bazel_external_data_pkg")
 
-# Include these as local repositories to have them be ignored by `test ...`.
-# @ref https://github.com/bazelbuild/bazel/issues/2460#issuecomment-296940882
-local_repository(
-    name = "bazel_external_data_test_ignore",
-    path = "test/workspaces",
-)
+load("//test:external_data_workspace_test.bzl", "add_external_data_test_repositories")
 
-# TODO: Can externals' tests be aliased into an existing repo?
-# (e.g. can Drake alias these tests for the time being?)
+add_external_data_test_repositories(__workspace_dir__)

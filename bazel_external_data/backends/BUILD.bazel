@@ -1,0 +1,45 @@
+# -*- python -*-
+
+load("//:expose_all_files.bzl", "expose_all_files")
+
+# Use relative package path, as `py_library` does not like absolute package
+# paths. This ensures that `//src` is added to `PYTHONPATH`.
+imports = ["../.."]
+
+py_library(
+    name = "core",
+    srcs = [
+        "__init__.py",
+        "mock.py",
+    ],
+    deps = [
+        "//bazel_external_data:core",
+    ],
+    imports = imports,
+)
+
+py_library(
+    name = "girder",
+    srcs = ["girder.py"],
+    deps = [":core"],
+)
+
+py_library(
+    name = "backends",
+    deps = [
+        ":core",
+        ":girder",
+    ],
+    imports = imports,
+    visibility = ["//bazel_external_data:__subpackages__"],
+)
+
+py_test(
+    name = "girder_test",
+    srcs = ["test/girder_test.py"],
+    deps = [
+        ":girder",
+    ],
+)
+
+expose_all_files(sub_dirs = ["test"])

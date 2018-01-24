@@ -1,39 +1,33 @@
 #!/bin/bash
-set -e -u
+set -eux -o pipefail
 
-# Copy necessary files to create a (set of) workspace(s) from an existing Bazel
-# workspace. For meta-testing Bazel workflows.
+# Copy necessary srcs to create a (set of) workspace(s) from an existing Bazel
+# workspace. For testing Bazel workflows.
 
-# Prevent from running outside of Bazel.
 if [[ ! $(basename $(dirname ${PWD})) =~ .*\.runfiles ]]; then
     echo "Must be run from within Bazel"
     exit 1
 fi
 
-cmd=${1}
-pkg_reldir=${2}
-shift && shift
-extra_dirs="$@"
+# Handle case when running with `bazel run`.
+if [[ -z "${TEST_TMPDIR:-}" ]]; then
+    tmp_base=/tmp/bazel_workspace_test
+    mkdir -p "${tmp_base}"
+    export TEST_TMPDIR=$(mktemp -d -p "${tmp_base}")
+fi
 
-tmp_base=/tmp/bazel_workspace_test
-mkdir -p ${tmp_base}
-export WORKSPACE_TMP=$(mktemp -d -p ${tmp_base})
-
-# Copy what's needed for a modifiable `bazel_pkg_advanced_test` directory.
-mock_dir=${WORKSPACE_TMP}/mock_workspace
-
-srcs="${pkg_reldir} ${extra_dirs}"
-mkdir -p ${mock_dir}
-readlink-py() { python -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' ${1}; }
+# Declare the new workspace directory (do not use the root, as that will
+# confuse Bazel with infinite symlinks).
+workspace_dir="${TEST_TMPDIR}/workspace"
+mkdir -p "${workspace_dir}"
+# Copy all of runfiles, assuming that we have no directory symlinks.
+srcs=$(find . -type f -o -type l)
 for src in ${srcs}; do
-    subdir=$(dirname ${src})
-    mkdir -p ${mock_dir}/${subdir}
-    cp -r $(readlink-py ${src}) ${mock_dir}/${subdir}
+    subdir=$(dirname "${src}")
+    mkdir -p "${workspace_dir}/${subdir}"
+    cp "${src}" "${workspace_dir}/${subdir}"
 done
 
-# Change to the workspace directory, and begin.
-cd ${mock_dir}/${pkg_reldir}
-# Get rid of Bazel symlinks.
-rm bazel-* || :
 # Execute command.
-eval ${cmd}
+cd "${workspace_dir}"
+exec "$@"

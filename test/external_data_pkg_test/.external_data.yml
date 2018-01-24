@@ -1,0 +1,10 @@
+# Project configuration.
+project: external_data_pkg_test
+
+remote: master
+
+remotes:
+    master:
+        backend: mock
+        dir: mock
+        upload_dir: /tmp/bazel_external_data/upload

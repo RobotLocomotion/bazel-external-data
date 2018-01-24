@@ -1,6 +1,0 @@
-# This file should live at: ${workspace_dir}/.external_data.project.yml
-# A package *must* be defined at the project root.
-
-# Project configuration, defines project boundaries.
-# For server-side versioning and specific sentinel detection.
-name: example

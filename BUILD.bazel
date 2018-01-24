@@ -1,45 +1,31 @@
 # -*- python -*-
 
+load(":expose_all_files.bzl", "expose_all_files")
+
 package(default_visibility = ["//visibility:public"])
-
-alias(
-    name = "core",
-    actual = "//src/bazel_external_data:core",
-)
-
-alias(
-    name = "cli.py",
-    actual = "//src/bazel_external_data:cli.py",
-)
-
-py_library(
-    name = "cli_deps",
-    deps = [
-        "//src/bazel_external_data:core",
-        "//src/bazel_external_data:cli_base",
-    ],
-)
 
 # Declared here to permit easier access to `cli` from external projects.
 py_binary(
     name = "cli",
-    srcs = [
-        "//src/bazel_external_data:cli.py",
-    ],
+    srcs = ["//bazel_external_data:cli.py"],
     deps = [
-        ":cli_deps",
+        "//bazel_external_data:core",
+        "//bazel_external_data:cli_base",
     ],
     visibility = ["//visibility:public"],
 )
 
-# Expose this package's main bits to be consumed via a test.
-filegroup(
-    name = "root_data",
-    srcs = [
-        "src",
-        "tools",
-        "WORKSPACE",
-        "BUILD.bazel"
-    ],
-    visibility = ["//test:__subpackages__"],
+exports_files(
+    srcs = ["exec.sh"],
 )
+
+# Bazel does not let us glob into `test/**`, even though the workspaces are not
+# a package of this workspace. The solution is to declare the lint tests
+# externally.
+expose_all_files(
+    sub_packages = ["bazel_external_data"],
+    # We do not care about `test` for direct consumption, so do not expose it.
+)
+
+# Linting is not done here to simplify test dependencies.
+# See :test/BUILD.bazel for how it is done.

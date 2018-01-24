@@ -1,40 +1,29 @@
-# -*- python -*-
-load(":workspace_test.bzl", "workspace_test")
-
-root_data = "//:root_data"
-
-workspace_test(
-    name = "workflows_test",
-    cmd = "./workflows_test.sh",
-    workspace = ":workspaces/bazel_pkg_advanced_test",
-    data = [root_data],
+# load("//tools/lint:lint.bzl", "add_lint_tests")
+load(
+    ":external_data_workspace_test.bzl",
+    "collect_external_data_lint_files",
+    "external_data_workspace_test",
 )
 
-workspace_test(
-    name = "bazel_pkg_test",
-    workspace = ":workspaces/bazel_pkg_test",
-    data = [root_data],
+external_data_workspace_test(
+    name = "external_data_pkg_test",
 )
 
-workspace_test(
-    name = "bazel_pkg_advanced_test",
-    workspace = ":workspaces/bazel_pkg_advanced_test",
-    data = [root_data],
+exports_files(
+    srcs = ["workspace_test.sh"],
 )
 
-workspace_test(
-    name = "bazel_pkg_downstream_test",
-    workspace = ":workspaces/bazel_pkg_downstream_test",
-    data = [
-        ":workspaces/bazel_pkg_test",
-        root_data,
-    ],
-)
+# To simplify testing `load` dependencies, linting is done in this package
+# only. This macro collects all lint files under `//...`,
+# excluding the files in this package (which are implicitly added by
+# `add_lint_tests`).
+collect_external_data_lint_files()
 
-# We can import external tests.
-# *However*, we cannot import test suites :(
-alias(
-    name = "imported_simple_test",
-    actual = "@bazel_external_data_test_ignore//:simple_test",
-    testonly = 1,
-)
+# add_lint_tests(
+#     bazel_lint_extra_srcs = [
+#         ":all_bazel_lint_files",
+#     ],
+#     python_lint_extra_srcs = [
+#         ":all_python_lint_files",
+#     ],
+# )

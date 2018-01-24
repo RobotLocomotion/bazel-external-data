@@ -1,20 +1,33 @@
+# -*- python -*-
+
+# Include release options:
+# https://docs.bazel.build/versions/master/user-manual.html#bazel-releng
+ARGS_DEFAULT = [
+    "bazel",
+    "--bazelrc=/dev/null",
+    "--batch",
+    "test",
+    "//...",
+]
+
 def workspace_test(
         name,
-        workspace,
-        cmd="'bazel test //...'",  # *sigh*... Needs quotes.
+        args = ARGS_DEFAULT,
         data = []):
-    """Provides a unittest given writeable access to a copy of a given workspace
-    contained in the current project. """
-    # Unfortunately, using a `glob(...)` does not play with existing Bazel
-    # symlinks (you can't even ignore them, at least in Bazel 0.6.1).
-    # For now, just pass in whatever filegroups are needed, and copy them
-    # to enable as many unittests as possible (e.g. workflows).
-    args = [cmd, "$(location {})".format(workspace)]
-    for datum in data:
-        args.append("$(locations {})".format(datum))
+    """
+    Copies all contents under `*.runfiles/${workspace}/**` to a temporary
+    directory, then evalutates `args` in `bash` in the new temporary runfiles
+    workspace directory.
+
+    @param args
+        Arguments for `bash` to execute. By default, will run
+        `bazel test //...` with release flavoring.
+    @param data
+        Data required for the workspace test.
+    """
     native.sh_test(
         name = name,
-        srcs = ["workspace_test.sh"],
+        srcs = ["@bazel_external_data_pkg//test:workspace_test.sh"],
         args = args,
-        data = [workspace] + data,
+        data = data,
     )
