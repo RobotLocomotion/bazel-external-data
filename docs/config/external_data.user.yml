@@ -1,0 +1,13 @@
+# This file should live at: ~/.config/bazel_external_data/config.yml
+
+core:
+    # (optional) Where cache files are stored, if the project does not have its own specific cache store.
+    #   Storage: {cache_dir}/{hash_type}/{hash[0:2]}/{hash[2:4]}/{hash}
+    cache_dir: ~/.cache/bazel_external_data/
+
+# Girder Backend settings.
+girder:
+    url:
+        "https://girder.example.com":
+            # Authentication. Leave empty if no authentication needed.
+            api_key: "<insert api key here>"
