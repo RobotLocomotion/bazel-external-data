@@ -1,0 +1,22 @@
+# Copied from girder:3550d33:/docker-compose.yml
+version: "3.3"
+
+services:
+  mongodb:
+    image: mongo:3.0
+    ports:
+      - "27017"
+    volumes:
+      - "/data/db"
+
+  girder:
+    build:
+      context: .
+      args:
+        db: mongodb://mongodb:27017/girder
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    links:
+      - "mongodb:mongodb"
+    # cpus: "1.0"
