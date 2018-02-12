@@ -24,8 +24,6 @@ class GirderHashsumBackend(Backend):
         self._api_key = util.get_chain(url_config_node, ['api_key'])
         self._token = None
         self._girder_client = None
-        # Cache configuration.
-        self._config_cache_file = os.path.join(user.cache_dir, 'config', 'girder.yml')
 
     def _request(self, endpoint, params={}, method="get", stream=False):
         def json_value(value):
@@ -42,33 +40,11 @@ class GirderHashsumBackend(Backend):
         r.raise_for_status()
         return r
 
-    def _read_config_cache(self):
-        if os.path.isfile(self._config_cache_file):
-            with open(self._config_cache_file) as f:
-                return yaml.load(f)
-        else:
-            return {}
-
-    def _write_config_cache(self, config_cache):
-        tgt_dir = os.path.dirname(self._config_cache_file)
-        if not os.path.isdir(tgt_dir):
-            os.makedirs(tgt_dir)
-        with open(self._config_cache_file, 'w') as f:
-            yaml.dump(config_cache, f, default_flow_style=False)
-
     def _get_folder_id(self):
-        config_cache = self._read_config_cache()
         key_chain = ['url', self._url, 'folder_ids', self._folder_path]
-        folder_id = util.get_chain(config_cache, key_chain)
-        # TODO(eric.cousineau): If folder is invalid, discard it.
-        # Do this in `check_file`?
-        if folder_id is None:
-            response = self._request('/resource/lookup', params={"path": self._folder_path}).json()
-            assert response["_modelType"] == "folder"
-            folder_id = str(response["_id"])
-            util.set_chain(config_cache, key_chain, folder_id)
-            self._write_config_cache(config_cache)
-        return folder_id
+        response = self._request('/resource/lookup', params={"path": self._folder_path}).json()
+        assert response["_modelType"] == "folder"
+        return str(response["_id"])
 
     def _authenticate_if_needed(self):
         if self._api_key is not None and self._token is None:
