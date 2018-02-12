@@ -28,6 +28,8 @@ from bazel_external_data.backends.girder import GirderHashsumBackend
 
 parser = argparse.ArgumentParser()
 parser.add_argument("config_file", type=str)
+parser.add_argument("--num_loops", type=int, default=1)
+parser.add_argument("--pause_between", type=float, default=0.)
 parser.add_argument("--num_downloads", type=int, default=1)
 args = parser.parse_args()
 
@@ -65,18 +67,27 @@ if not os.path.exists(project_root):
     os.makedirs(project_root)
 if not os.path.exists(output):
     os.makedirs(output)
-with open(path, 'w') as f:
-    f.write("Test file: " + str(datetime.datetime.now()))
 
-hash = hashes.sha512.compute(path)
-if not backend.check_file(hash, relpath):
-    backend.upload_file(hash, relpath, path)
-time.sleep(1)
-for i in range(args.num_downloads):
-    print("Download: {}".format(i))
-    output_path = os.path.join(output, relpath)
-    if os.path.exists(output_path):
-        os.unlink(output_path)
-    backend.download_file(hash, relpath, output_path)
-    hash.compare_file(output_path, do_throw=True)
-    sys.stdout.flush()
+for _i in range(args.num_loops):
+    print("Outer: {}".format(_i))
+    with open(path, 'w') as f:
+        f.write("Test file: " + str(datetime.datetime.now()))
+
+    hash = hashes.sha512.compute(path)
+    if not backend.check_file(hash, relpath):
+        backend.upload_file(hash, relpath, path)
+
+    time.sleep(1)
+    for _j in range(args.num_downloads):
+        print("- Download: {}".format(_j))
+        output_path = os.path.join(output, relpath)
+        if os.path.exists(output_path):
+            os.unlink(output_path)
+        backend.download_file(hash, relpath, output_path)
+        hash.compare_file(output_path, do_throw=True)
+        sys.stdout.flush()
+
+    if args.num_loops > 1 and args.pause_between:
+        print("Pausing")
+        sys.stdout.flush()
+        time.sleep(args.pause_between)
