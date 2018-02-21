@@ -14,6 +14,10 @@ echo 'workspace(name = "drake")' > ./WORKSPACE
 # Record directory.
 drake_dir="${PWD}"
 
+# Ensure that temporary directories are remapped
+find . -name '*external_data.*' | \
+    xargs sed -i "s#/tmp/bazel_external_data#${TEST_TMPDIR}#g"
+
 # Change to the workspace directory.
 cd "${package_relpath}"
 # Ensure path to Drake is corrected.

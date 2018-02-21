@@ -9,4 +9,5 @@ if [[ ! -f ${bin} ]]; then
     bazel build @bazel_external_data_pkg//:cli
 fi
 # Execute.
-${bin} "$@"
+cur_dir=$(dirname $0)
+${bin} --user_config=${cur_dir}/external_data.user.yml "$@"

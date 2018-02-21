@@ -18,6 +18,7 @@ _upstream_files = [
 
 def external_data_workspace_test(
         name,
+        workspace = None,
         args = ARGS_DEFAULT,
         data = []):
     """
@@ -30,9 +31,11 @@ def external_data_workspace_test(
         include basic upstream files from Drake (`//`) and
         the workspace test's files.
     """
-    package = "@{}//".format(name)
+    if workspace == None:
+        workspace = name
+    package = "@{}//".format(workspace)
     package_files = package + ":all_files_recursive"
-    package_relpath = "external/" + name
+    package_relpath = "external/" + workspace
     script = "external_data_workspace_test.sh"
     workspace_test(
         name = name,

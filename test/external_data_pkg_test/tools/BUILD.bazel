@@ -2,4 +2,11 @@
 
 load("@bazel_external_data_pkg//:expose_all_files.bzl", "expose_all_files")
 
+# Do not use user's configuration.
+exports_files(
+    srcs = [
+        "external_data.user.yml",
+    ],
+)
+
 expose_all_files()
