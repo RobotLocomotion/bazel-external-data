@@ -313,12 +313,19 @@ class Remote(object):
             download_file_direct(output_file)
             return 'download'
 
-    def upload_file(self, hash_type, project_relpath, filepath):
-        """ Uploads a file. """
+    def upload_file(self, hash_type, project_relpath, filepath,
+                    check_overlay=True):
+        """
+        Uploads a file.
+        If `check_overlay` is True, the file will not be uploaded the this
+        remote if the overlay already has it.
+        """
         assert os.path.isabs(filepath)
         hash = hash_type.compute(filepath)
-        if self._backend.check_file(hash, project_relpath):
-            print("File already uploaded")
+        if self.check_file(hash, project_relpath, check_overlay=check_overlay):
+            note = (
+                check_overlay and "checking overlay" or "ignoring overlay")
+            print("File already uploaded ({})".format(note))
         else:
             self._backend.upload_file(hash, project_relpath, filepath)
         return hash

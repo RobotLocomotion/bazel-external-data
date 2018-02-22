@@ -15,6 +15,9 @@ def add_arguments(parser):
         '--local_only', action='store_true',
         help="Only update local file information (e.g. hash file), but do not" +
              "upload the file.")
+    parser.add_argument(
+        '--ignore_overlay', action='store_true',
+        help="Ensure current remote has the file, ignoring the overlay.")
 
 
 def run(args, project):
@@ -46,7 +49,8 @@ def do_upload(args, project, filepath):
 
     if not args.local_only:
         hash = remote.upload_file(
-            hash.hash_type, project_relpath, orig_filepath)
+            hash.hash_type, project_relpath, orig_filepath,
+            check_overlay=not args.ignore_overlay)
     else:
         hash = hash.compute(orig_filepath)
     project.update_file_info(info, hash)

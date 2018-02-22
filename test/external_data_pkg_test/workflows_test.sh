@@ -150,6 +150,16 @@ bazel-test :test_basics
 # There should be two files uploaded.
 [[ $(find ${upload_dir} -type f | wc -l) -eq 2 ]]
 
+# Test default upload behavior vs. --ignore_overlay
+# Specifically, use a file in `master` that is not currently in `extra`.
+../tools/external_data download ../data/basic.bin -o ./basic_copy.bin
+# - Try uploading. This should not actually upload the file.
+../tools/external_data upload ./basic_copy.bin
+[[ $(find ${upload_dir} -type f | wc -l) -eq 2 ]]
+# - Try uploading wth `--ignore_overlay`. This should upload the file to `extra`.
+../tools/external_data upload --ignore_overlay ./basic_copy.bin
+[[ $(find ${upload_dir} -type f | wc -l) -eq 3 ]]
+
 # Switch back to normal mode.
 sed -i 's/mode = "devel",/# Normal is implicit./g' ./BUILD.bazel
 cat ./BUILD.bazel
