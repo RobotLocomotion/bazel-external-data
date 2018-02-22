@@ -76,7 +76,7 @@ def expose_all_files(
         srcs = native.glob(patterns)
         for sub_dir in sub_dirs:
             srcs += native.glob([
-                sub_dir + "/" + pattern for pattern in patterns])
+                sub_dir + "/**/" + pattern for pattern in patterns])
         native.filegroup(
             name = name,
             srcs = srcs,

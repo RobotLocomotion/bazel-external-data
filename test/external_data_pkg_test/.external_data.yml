@@ -1,10 +1,15 @@
 # Project configuration.
 project: external_data_pkg_test
 
-remote: master
+remote: extra
 
 remotes:
     master:
         backend: mock
-        dir: mock
+        dir: mock/master_files
         upload_dir: /tmp/bazel_external_data/upload
+    extra:
+        backend: mock
+        dir: mock/extra_files
+        upload_dir: /tmp/bazel_external_data/upload_extra
+        overlay: master

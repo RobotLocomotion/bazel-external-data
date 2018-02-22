@@ -13,6 +13,7 @@ py_test(
     srcs = ["test_basics.py"],
     data = [
         "//data",
+        "mock",  # Directory.
     ],
     size = "small",
     visibility = ["//visibility:public"],

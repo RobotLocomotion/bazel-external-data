@@ -2,6 +2,8 @@
 
 load("//tools:external_data.bzl",
     "external_data",
+    "external_data_group",
+    "get_original_files",
 )
 
 load("@bazel_external_data_pkg//:expose_all_files.bzl", "expose_all_files")
@@ -12,11 +14,24 @@ external_data(
     file = "basic.bin",
 )
 
+external_data_group(
+    name = "glob",
+    files = get_original_files(glob(['glob_*.bin.sha512'])),
+)
+
+external_data(
+    file = "subdir/extra.bin",
+)
+
 filegroup(
     name = "data",
     srcs = [
         ":basic.bin",
+        ":glob",
+        ":subdir/extra.bin",
     ],
 )
 
-expose_all_files()
+expose_all_files(
+    sub_dirs = ["subdir"],
+)

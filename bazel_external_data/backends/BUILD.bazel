@@ -40,6 +40,7 @@ py_test(
     deps = [
         ":girder",
     ],
+    tags = ["manual"],
 )
 
 expose_all_files(sub_dirs = ["test"])
