@@ -98,6 +98,8 @@ class GirderHashsumBackend(Backend):
                 relpath = os.path.relpath(self._folder_path, self._create_root_path)
                 folder = makedirs(self._get_girder_client(), self._create_root_path, relpath)
                 print("Created folder: {}".format(self._folder_path))
+            else:
+                raise RuntimeError("Could not find folder: {}".format(self._folder_path))
         assert folder["_modelType"] == "folder"
         return str(folder["_id"])
 
