@@ -246,4 +246,17 @@ bazel test :glob_4.bin__check_test && should_fail
 # - Ensure that testing across all download tests also fail.
 bazel test --test_tag_filters=external_data_check_test ... && should_fail
 
+# Check squashing.
+# - Remove bad file.
+mv bad.bin.sha512 bad.bin.sha512.ignore
+../tools/external_data -v squash master extra merge
+# - Ensure that we've uploaded only two files as desired
+# (`glob_4.bin` and `extra.bin`).
+upload_merge_dir=${TEST_TMPDIR}/upload_merge
+[[ $(find ${upload_merge_dir} -type f | wc -l) -eq 2 ]]
+# - Test with files specified.
+rm -rf ${upload_merge_dir}
+../tools/external_data squash master extra merge --files ./subdir/extra.bin
+[[ $(find ${upload_merge_dir} -type f | wc -l) -eq 1 ]]
+
 echo "[ Done ]"

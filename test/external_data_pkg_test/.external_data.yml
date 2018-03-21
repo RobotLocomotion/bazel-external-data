@@ -13,3 +13,8 @@ remotes:
         dir: mock/extra_files
         upload_dir: /tmp/bazel_external_data/upload_extra
         overlay: master
+    merge:
+        backend: mock
+        dir: mock/merge_files
+        upload_dir: /tmp/bazel_external_data/upload_merge
+        overlay: master

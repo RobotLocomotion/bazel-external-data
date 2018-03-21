@@ -25,6 +25,7 @@ py_library(
         "download.py",
         "upload.py",
         "check.py",
+        "squash.py",
     ],
     deps = [
         ":core",
