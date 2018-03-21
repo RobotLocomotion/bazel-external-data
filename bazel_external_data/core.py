@@ -1,6 +1,7 @@
 import os
 import shutil
 import stat
+import subprocess
 
 from bazel_external_data import util, config_helpers, hashes
 
@@ -76,7 +77,7 @@ class Project(object):
         backend_cls = self._backends[backend_type]
         return backend_cls(config, self.root_path, self.user)
 
-    def _get_remote(self, name):
+    def get_remote(self, name):
         """Gets a remote by name, loading on demand. """
         remote = self._remotes.get(name)
         if remote:
@@ -90,7 +91,7 @@ class Project(object):
         # Load remote.
         remote_config = self.config['remotes'][name]
         remote = Remote(remote_config, name, self.user.cache_dir,
-                        self._load_backend, self._get_remote)
+                        self._load_backend, self.get_remote)
         # Update.
         self._remote_is_loading.remove(name)
         self._remotes[name] = remote
@@ -117,12 +118,23 @@ class Project(object):
         hash, orig_filepath = (
             self._frontend.get_hash_file_info(input_file, needs_hash))
         project_relpath = self._get_relpath(orig_filepath)
-        remote = self._get_remote(self._remote_selected)
+        remote = self.get_remote(self._remote_selected)
         return FileInfo(hash, remote, project_relpath, orig_filepath)
 
     def update_file_info(self, info, hash):
         """Writes hashsum for a given set of file information. """
         self._frontend.update_hash_file_info(info.orig_filepath, hash)
+
+    def get_registered_files(self, use_relpath=False):
+        """Returns a list of relpaths of files contained within the project."""
+        output = subprocess.check_output(
+            "find '{root}' -name '*.sha512'".format(root=self.root_path),
+            shell=True)
+        files = self._frontend.find_registered_file_abspaths(self.root_path)
+        if use_relpath:
+            return [self._get_relpath(file) for file in files]
+        else:
+            return files
 
 
 class User(object):
@@ -153,6 +165,14 @@ class HashFileFrontend(object):
     def _get_hash_file(self, input_file):
         assert not self._is_hash_file(input_file)
         return input_file + self._suffix
+
+    def find_registered_file_abspaths(self, start_dir):
+        """Gets all registered file abspaths."""
+        output = subprocess.check_output(
+            "find '{root}' -name '*{suffix}'".format(
+                root=start_dir, suffix=self._suffix),
+            shell=True)
+        return output.strip().split("\n")
 
     def get_hash_file_info(self, input_file, needs_hash):
         """Gets hash file information. """
@@ -254,6 +274,7 @@ class Remote(object):
         @returns 'cache' if there was a cachce hit, 'download' otherwise.
         """
         assert os.path.isabs(output_file)
+        assert not os.path.exists(output_file)
 
         # Helper functions.
 

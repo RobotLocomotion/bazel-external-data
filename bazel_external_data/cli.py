@@ -6,7 +6,7 @@ import sys
 import traceback
 import yaml
 
-from bazel_external_data import config_helpers, download, upload, check
+from bazel_external_data import config_helpers, download, upload, check, squash
 from bazel_external_data.core import load_project
 from bazel_external_data.util import eprint, in_bazel_runfiles
 
@@ -29,9 +29,10 @@ parser.add_argument(
 
 subparsers = parser.add_subparsers(dest="command")
 
-download.add_arguments(subparsers.add_parser("download"))
-upload.add_arguments(subparsers.add_parser("upload"))
-check.add_arguments(subparsers.add_parser("check"))
+download.add_arguments(subparsers.add_parser("download", help=download.__doc__))
+upload.add_arguments(subparsers.add_parser("upload", help=upload.__doc__))
+check.add_arguments(subparsers.add_parser("check", help=check.__doc__))
+squash.add_arguments(subparsers.add_parser("squash", help=squash.__doc__))
 
 args = parser.parse_args()
 
@@ -70,6 +71,8 @@ try:
         status = upload.run(args, project)
     elif args.command == "check":
         status = check.run(args, project)
+    elif args.command == "squash":
+        status = squash.run(args, project)
 except Exception as e:
     if args.verbose:
         # Full stack trace.

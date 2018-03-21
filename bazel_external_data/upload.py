@@ -1,10 +1,10 @@
 """
-@file
 Uploads a file or set of files for this project.
 """
 
 import os
 import sys
+import yaml
 
 from bazel_external_data.util import eprint
 

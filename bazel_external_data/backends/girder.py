@@ -7,6 +7,47 @@ import yaml
 from bazel_external_data import util
 from bazel_external_data.core import Backend
 
+# TODO(eric.cousineau): Start using `girder_client` rather than recreating.
+
+
+def makedirs(client, root, relpath):
+    """Creates folders.
+    @parma client GirderClient instance to use
+    @param root Base folder which *must* exist
+    @param relpath Folder paths which can be created
+    """
+    to_create = []
+    parent_relpath = relpath
+    parent = None
+    # Test which portion of the path exists, and which portion to create.
+    while True:
+        parent_abspath = (root + "/" + parent_relpath).rstrip('/')
+        parent = client.resourceLookup(parent_abspath, test=True)
+        if parent or not parent_relpath:
+            break
+        else:
+            parent_relpath, name = os.path.split(parent_relpath)
+            to_create.insert(0, name)
+    if not parent:
+        raise RuntimeError("Could not find root folder: {}, relpath: {}".format(root, relpath))
+    # Create each piece.
+    cur_parent = parent
+    for name in to_create:
+        cur_parent = client.createFolder(cur_parent["_id"], name, parentType=cur_parent["_modelType"])
+    return cur_parent
+
+
+def move_items(client, old_path, new_path):
+    """Move items from an old path to a new one."""
+    new = client.resourceLookup(new_path)
+    old = client.resourceLookup(old_path)
+    assert new["_modelType"] == "folder" and old["_modelType"] == "folder"
+    subfolder = list(client.listFolder(old["_id"]))
+    if len(subfolder) > 0:
+        raise RuntimeError("'{}' should be a flat folder with no subfolders, items only".format(old_path))
+    for item in client.listItem(old["_id"]):
+        client.put("item/{}".format(item["_id"]), {"folderId": new["_id"]})
+
 
 class GirderHashsumBackend(Backend):
     """ Supports Girder servers where authentication may be needed (e.g. for uploading, possibly downloading). """
@@ -19,13 +60,14 @@ class GirderHashsumBackend(Backend):
         self._url = config['url']
         self._api_url = "{}/api/v1".format(self._url)
         self._folder_path = config['folder_path']
+        self._create_root_path = config.get('create_root_path')
         # Get (optional) authentication information.
         url_config_node = util.get_chain(user.config, ['girder', 'url', self._url])
         self._api_key = util.get_chain(url_config_node, ['api_key'])
         self._token = None
         self._girder_client = None
 
-    def _request(self, endpoint, params={}, method="get", stream=False):
+    def _request(self, endpoint, params={}, method="get", stream=False, test=False):
         def json_value(value):
             if isinstance(value, str):
                 return value
@@ -37,14 +79,27 @@ class GirderHashsumBackend(Backend):
         params = {key: json_value(value) for key, value in params.iteritems()}
         func = getattr(requests, method)
         r = func(self._api_url + endpoint, params=params, headers=headers, stream=stream)
-        r.raise_for_status()
+        if test:
+            if r.status_code >= 400:
+                return None
+        else:
+            r.raise_for_status()
         return r
 
     def _get_folder_id(self):
         key_chain = ['url', self._url, 'folder_ids', self._folder_path]
-        response = self._request('/resource/lookup', params={"path": self._folder_path}).json()
-        assert response["_modelType"] == "folder"
-        return str(response["_id"])
+        response = self._request('/resource/lookup', params={"path": self._folder_path}, test=True)
+        if response:
+            folder = response.json()
+        else:
+            # See if we can create the folder
+            if self._create_root_path:
+                assert self._folder_path.startswith(self._create_root_path)
+                relpath = os.path.relpath(self._folder_path, self._create_root_path)
+                folder = makedirs(self._get_girder_client(), self._create_root_path, relpath)
+                print("Created folder: {}".format(self._folder_path))
+        assert folder["_modelType"] == "folder"
+        return str(folder["_id"])
 
     def _authenticate_if_needed(self):
         if self._api_key is not None and self._token is None:

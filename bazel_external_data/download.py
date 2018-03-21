@@ -1,5 +1,4 @@
 """
-@file
 Downloads a file or a set of files for this project.
 """
 
