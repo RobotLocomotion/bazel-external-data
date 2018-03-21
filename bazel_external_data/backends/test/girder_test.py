@@ -24,7 +24,7 @@ import time
 import yaml
 
 from bazel_external_data import core, hashes
-from bazel_external_data.backends.girder import GirderHashsumBackend
+from bazel_external_data.backends.girder import GirderHashsumBackend, move_items, makedirs
 
 parser = argparse.ArgumentParser()
 parser.add_argument("config_file", type=str)
@@ -37,7 +37,7 @@ with open(args.config_file) as f:
     config = yaml.load(f)
 
 url = config["url"]
-folder_path = config["folder_path"]
+base_path = config["folder_path"]
 api_key = config["api_key"]
 
 project_root = "/tmp/bazel_external_data/root"
@@ -52,12 +52,15 @@ girder:
 """.format(url=url, api_key=api_key)))
 user = core.User(user_config)
 
+# Indirectly check creation.
+folder_path = base_path + "/sub/path"
+
 config = yaml.load("""
 backend: girder_hashsum
 url: {url}
-folder_path: {folder_path}/sub/path
-create_root_path: {folder_path}
-""".format(url=url, folder_path=folder_path))
+folder_path: {folder_path}
+create_root_path: {base_path}
+""".format(url=url, folder_path=folder_path, base_path=base_path))
 
 backend = GirderHashsumBackend(config, project_root, user)
 
@@ -92,3 +95,16 @@ for _i in range(args.num_loops):
         print("Pausing")
         sys.stdout.flush()
         time.sleep(args.pause_between)
+
+# Try moving folder.
+client = backend._get_girder_client()
+new_path = base_path + "/sub_moved"
+new = makedirs(client, base_path, "sub_moved")
+old_path_bad = base_path + "/sub"  # Not flat.
+try:
+    move_items(client, old_path_bad, new_path)
+    raise SystemExit("Should have thrown")
+except RuntimeError:
+    pass
+old_path = base_path + "/sub/path"  # Flat.
+move_items(client, old_path, new_path)

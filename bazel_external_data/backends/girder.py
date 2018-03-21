@@ -37,6 +37,18 @@ def makedirs(client, root, relpath):
     return cur_parent
 
 
+def move_items(client, old_path, new_path):
+    """Move items from an old path to a new one."""
+    new = client.resourceLookup(new_path)
+    old = client.resourceLookup(old_path)
+    assert new["_modelType"] == "folder" and old["_modelType"] == "folder"
+    subfolder = list(client.listFolder(old["_id"]))
+    if len(subfolder) > 0:
+        raise RuntimeError("'{}' should be a flat folder with no subfolders, items only".format(old_path))
+    for item in client.listItem(old["_id"]):
+        client.put("item/{}".format(item["_id"]), {"folderId": new["_id"]})
+
+
 class GirderHashsumBackend(Backend):
     """ Supports Girder servers where authentication may be needed (e.g. for uploading, possibly downloading). """
     def __init__(self, config, project_root, user):
