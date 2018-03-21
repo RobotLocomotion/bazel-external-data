@@ -129,6 +129,9 @@ rm new.bin
 ../tools/external_data download ./new.bin
 diff new.bin ./expected.txt > /dev/null
 
+# Ensure that we can use the `--verbose` flag.
+../tools/external_data -v download -f ./new.bin
+
 # Now we wish to actively modify the file.
 cat > expected.txt <<EOF
 New contents!
@@ -146,6 +149,7 @@ bazel-test :test_basics
 # Now upload the newest version (both original file and hash file should work).
 ../tools/external_data upload ./new.bin
 ../tools/external_data upload ./new.bin.sha512
+../tools/external_data -v upload ./new.bin.sha512
 
 # There should be two files uploaded.
 [[ $(find ${upload_dir} -type f | wc -l) -eq 2 ]]
@@ -212,6 +216,7 @@ find . -name '*.bin' | xargs rm -f
 find . -name 'bad.bin.sha512' -prune -o \( -name '*.sha512' -print \) | xargs ../tools/external_data download -f
 
 ../tools/external_data check ./subdir/extra.bin.sha512
+../tools/external_data -v check ./subdir/extra.bin.sha512
 # Ensure that 'bad.bin' is invalid with `check` and `download`.
 ../tools/external_data check ./bad.bin.sha512 && should_fail
 ../tools/external_data download ./bad.bin.sha512 && should_fail
