@@ -1,5 +1,4 @@
 """
-@file
 Uploads a file or set of files for this project.
 """
 
