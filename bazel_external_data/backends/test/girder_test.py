@@ -55,7 +55,8 @@ user = core.User(user_config)
 config = yaml.load("""
 backend: girder_hashsum
 url: {url}
-folder_path: {folder_path}
+folder_path: {folder_path}/sub/path
+create_root_path: {folder_path}
 """.format(url=url, folder_path=folder_path))
 
 backend = GirderHashsumBackend(config, project_root, user)
