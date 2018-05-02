@@ -17,6 +17,8 @@ should_fail() { eecho "Should have failed!"; exit 1; }
 cache_dir=${TEST_TMPDIR}/test_cache
 upload_dir=${TEST_TMPDIR}/upload_extra
 
+# TODO(eric.cousineau): Write workflow tests for archive files.
+
 cd $(dirname $0)
 pwd
 

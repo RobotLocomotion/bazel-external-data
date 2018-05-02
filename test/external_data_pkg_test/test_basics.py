@@ -21,6 +21,12 @@ expected_files = {
     ],
 }
 
+archive_files = [
+    "archive/a.bin",
+    "archive/b.bin",
+    "archive/subdir/c.bin",
+]
+
 data_dir = 'data'
 mock_dir = 'mock'
 
@@ -28,20 +34,24 @@ mock_dir = 'mock'
 class TestBasics(unittest.TestCase):
     def test_files(self):
         # Go through each file and ensure that we have the desired contents.
-        files = subshell("find data -name '*.bin'")
+        files = subshell("find data -name '*.bin' | sort")
         for file in files.split('\n'):
             contents = open(file).read()
             file_name = os.path.basename(file)
 
-            mock_file = None
             mock_contents = None
             for mock_name, mock_file_names in expected_files.iteritems():
                 if file_name in mock_file_names:
                     mock_file = os.path.join(mock_dir, mock_name, file_name)
                     mock_contents = open(mock_file).read()
                     break
-            if mock_file is None:
-                print("Skipping: {}".format(file))
+            if mock_contents is None:
+                for archive_file in archive_files:
+                    if "data/" + archive_file == file:
+                        mock_contents = "Contents of '{}'".format(file_name)
+                        break
+                else:
+                    print("Skipping: {}".format(file))
             else:
                 self.assertEquals(contents, mock_contents)
 

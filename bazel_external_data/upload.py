@@ -6,7 +6,12 @@ import os
 import sys
 import yaml
 
-from bazel_external_data.util import eprint
+from bazel_external_data.util import (
+    eprint,
+    is_archive,
+    generate_bazel_manifest,
+    get_bazel_manifest_filename,
+)
 
 
 def add_arguments(parser):
@@ -18,6 +23,13 @@ def add_arguments(parser):
     parser.add_argument(
         '--ignore_overlay', action='store_true',
         help="Ensure current remote has the file, ignoring the overlay.")
+    parser.add_argument(
+        '--manifest_generation', type=str,
+        choices=["always", "infer", "none"], default="infer",
+        help=("Bazel Manifest generation policy for archives. If `always`, "
+              "the manifest will always be generated. If `infer`, the "
+              "manifest will be regenerated if it already exists. If `none`, "
+              "no manifest will be generated."))
 
 
 def run(args, project):
@@ -54,3 +66,19 @@ def do_upload(args, project, filepath):
     else:
         hash = hash.compute(orig_filepath)
     project.update_file_info(info, hash)
+    handle_manifest(args, info)
+
+
+def handle_manifest(args, info):
+    if is_archive(info.project_relpath):
+        manifest_filepath = get_bazel_manifest_filename(info.orig_filepath)
+        if args.manifest_generation == "infer":
+            do_manifest = os.path.isfile(manifest_filepath)
+        elif args.manifest_generation == "always":
+            do_manifest = True
+        elif args.manifest_generation == "none":
+            do_manifest = False
+        else:
+            assert False, "Bad switch"
+        if do_manifest:
+            generate_bazel_manifest(info.orig_filepath)
