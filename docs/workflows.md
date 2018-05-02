@@ -143,6 +143,35 @@ If you want to edit a certain file in a group, you may use
 
 This means that Bazel will automatically switch to using your local file, rather than use its own internal version. *Please use caution* when updating your branches.
 
+## Extract Archives in Bazel `BUILD` Files
+
+To unpack archives in Bazel `BUILD` files, first upload your archive (presently,
+only `*.tar.gz` files.
+
+Next, using the CLI tool, tell it to explicitly generate the manifest file when
+you upload the file:
+
+    ../tools/external_data/cli upload --manifest_generation=always archive.tar.gz
+
+You should now see `archive.tar.gz.manifest.bzl`. Once this file is generated,
+the manifest will by default be regenerated when you re-upload the archive.
+
+In the `BUILD` file, you should now load this file, and pass it to
+`extract_archive`:
+
+    load("//tools:external_data.bzl",
+        "external_data",
+        "extract_archive",
+    )
+    load(":archive.tar.gz.manifest.bzl", archive_manifest="manifest")
+    extract_archive(
+        name = "archive",
+        manifest = archive_manifest,
+    )
+
+Now you can use the `:archive` target as filegroup. For more information on usage, see
+the function documentation for `extract_archive`.
+
 ## Download a Set of Files
 
 If you wish to download *all* files of a given extension at the specified revision under a certain directory, you may use `find`. For example:

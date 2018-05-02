@@ -15,6 +15,12 @@ py_binary(
     visibility = ["//visibility:public"],
 )
 
+# Declared for archive stuff (should generally be internal).
+py_binary(
+    name = "extract_archive",
+    srcs = ["extract_archive.py"],
+)
+
 exports_files(
     srcs = ["exec.sh"],
 )

@@ -3,6 +3,7 @@
 load("//tools:external_data.bzl",
     "external_data",
     "external_data_group",
+    "extract_archive",
     "get_original_files",
 )
 
@@ -23,12 +24,24 @@ external_data(
     file = "subdir/extra.bin",
 )
 
+external_data(
+    file = "archive.tar.gz",
+)
+
+# Extract tarfile.
+load(":archive.tar.gz.manifest.bzl", archive_manifest="manifest")
+extract_archive(
+    name = "archive",
+    manifest = archive_manifest,
+)
+
 filegroup(
     name = "data",
     srcs = [
         ":basic.bin",
         ":glob",
         ":subdir/extra.bin",
+        ":archive",
     ],
 )
 
