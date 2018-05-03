@@ -3,6 +3,7 @@ from __future__ import print_function
 import os
 import subprocess
 import sys
+import tarfile
 
 
 def is_child_path(child_path, parent_path, require_abs=True):
@@ -95,3 +96,40 @@ def subshell(cmd, strip=True):
 def eprint(*args):
     """Prints to stderr. """
     print(*args, file=sys.stderr)
+
+
+def is_archive(filepath):
+    """Determines if a filepath indicates that it's an archive."""
+    return filepath.endswith(".tar.gz")
+
+
+def get_bazel_manifest_filename(archive):
+    return archive + ".manifest.bzl"
+
+
+def generate_bazel_manifest(archive):
+    manifest = get_bazel_manifest_filename(archive)
+    with tarfile.open(archive) as tar, open(manifest, 'w') as f:
+        # Get all files.
+        members = []
+        for member in tar.getmembers():
+            if member.isfile():
+                members.append(member)
+            elif member.isdir():
+                # Ignore directories.
+                pass
+            else:
+                # Puke.
+                raise RuntimeError(
+                    "Bad tarfile file type: {} - {}".format(
+                        member.name, member.type))
+        # Generate text.
+        f.write("# Auto-generated manifest for consumption in both Bazel")
+        f.write(" and Python.\n")
+        f.write("manifest = dict(\n")
+        f.write("    files = [\n")
+        names = [member.name for member in members]
+        for name in sorted(names):
+            f.write("        \"{}\",\n".format(name))
+        f.write("    ],\n")
+        f.write(")\n")
