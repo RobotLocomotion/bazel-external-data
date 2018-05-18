@@ -233,7 +233,8 @@ def extract_archive(
         manifest,
         archive = None,
         strip_prefix = "",
-        output_dir = ""):
+        output_dir = "",
+        **kwargs):
     """Extracts an archive into a Bazel genfiles tree.
 
     Example:
@@ -311,4 +312,4 @@ def extract_archive(
         outs = outs,
         tools = [tool],
         cmd = cmd,
-    )
+        **kwargs)

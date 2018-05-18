@@ -100,7 +100,14 @@ def eprint(*args):
 
 def is_archive(filepath):
     """Determines if a filepath indicates that it's an archive."""
-    return filepath.endswith(".tar.gz")
+    exts = [
+        ".tar.bz2",
+        ".tar.gz",
+    ]
+    for ext in exts:
+        if filepath.endswith(ext):
+            return True
+    return False
 
 
 def get_bazel_manifest_filename(archive):
@@ -113,7 +120,7 @@ def generate_bazel_manifest(archive):
         # Get all files.
         members = []
         for member in tar.getmembers():
-            if member.isfile():
+            if member.isfile() or member.issym():
                 members.append(member)
             elif member.isdir():
                 # Ignore directories.

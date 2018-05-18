@@ -28,7 +28,8 @@ manifest = manifest_locals["manifest"]
 tar = tarfile.open(args.archive, 'r')
 # - We only allow regular files; not going to deal with symlinks or devices for
 # now.
-members = [member for member in tar.getmembers() if member.isfile()]
+members = [member for member in tar.getmembers()
+           if member.isfile() or member.issym()]
 tar_files = sorted((member.name for member in members))
 manifest_files = sorted(manifest["files"])
 # Demand exact matching.
