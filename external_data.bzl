@@ -54,6 +54,7 @@ def external_data(
         file,
         mode='normal',
         settings=SETTINGS_DEFAULT,
+        tags=[],
         visibility=None):
     """Defines an external data file.
 
@@ -125,7 +126,7 @@ def external_data(
             outs = [file],
             cmd = cmd,
             tools = [_TOOL],
-            tags = [_RULE_TAG],
+            tags = tags + [_RULE_TAG],
             # Changes `execroot`, and symlinks the files that we need to crawl
             # the directory structure and get hierarchical packages.
             local = 1,
@@ -144,6 +145,7 @@ def external_data_group(
         files,
         files_devel = [],
         mode='normal',
+        tags=[],
         settings=SETTINGS_DEFAULT,
         visibility=None):
     """Defines a group of external data files. """
@@ -155,7 +157,11 @@ def external_data_group(
         print('WARNING: You are specifying `files_devel` and ' +
               '`mode="devel"`, which is redundant. Try choosing one.')
 
-    kwargs = {'visibility': visibility, 'settings': settings}
+    kwargs = dict(
+        visibility = visibility,
+        tags = tags,
+        settings = settings,
+    )
 
     for file in files:
         if file not in files_devel:
