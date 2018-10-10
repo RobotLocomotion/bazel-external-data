@@ -2,6 +2,7 @@ import os
 import shutil
 import stat
 import subprocess
+import uuid
 
 from bazel_external_data import util, config_helpers, hashes
 
@@ -279,11 +280,15 @@ class Remote(object):
         # Helper functions.
 
         def download_file_direct(output_file):
+            # Assuming we're on Unix (where `os.rename` is atomic), use a
+            # tempfile to avoid race conditions.
+            tmp_file = output_file + "-" + str(uuid.uuid4())
             try:
-                self._download_file_direct(hash, project_relpath, output_file)
+                self._download_file_direct(hash, project_relpath, tmp_file)
             except util.DownloadError as e:
                 util.eprint("ERROR: For remote '{}'".format(self.name))
                 raise e
+            os.rename(tmp_file, output_file)
 
         def get_cached(check_sha):
             # Can use cache. Copy to output path.
