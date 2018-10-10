@@ -1,7 +1,7 @@
 # About
 
-This is a stub implementation of incorporating external data.
-More functionality to follow.
+This provides simple scripts and Bazel macros to incorporate external data into
+a project.
 
 # For Consumers of `external_data`
 
@@ -31,3 +31,13 @@ and Bazel `genrule`s).
     files, and macro for `external_data_workspace_test.sh`.
     *   `external_data_*_test` - Workspaces for testing downstream behavior.
         * `external_data_pkg_test` - Stub for now.
+
+# Testing
+
+Test generic workflows:
+
+    bazel test //...
+
+Test Girder backend with `docker-compose`:
+
+    ./bazel_external_data/backends/test/girder_test_runner.sh
