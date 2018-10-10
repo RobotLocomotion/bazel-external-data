@@ -6,8 +6,7 @@ services:
     image: mongo:3.0
     ports:
       - "27017"
-    volumes:
-      - "/data/db"
+    command: --smallfiles
 
   girder:
     build:
