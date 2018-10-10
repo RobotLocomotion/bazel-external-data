@@ -261,4 +261,8 @@ rm -rf ${upload_merge_dir}
 ../tools/external_data squash master extra merge --files ./subdir/extra.bin
 [[ $(find ${upload_merge_dir} -type f | wc -l) -eq 1 ]]
 
+# Briefly test race conditions by building both locally and externally.
+bazel clean
+bazel build //data @external_data_pkg_test//data
+
 echo "[ Done ]"
