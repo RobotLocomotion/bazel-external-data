@@ -15,7 +15,7 @@ class _HashType(object):
         """Computes the hashsum for a given `filepath`. """
         if not os.path.exists(filepath):
             raise RuntimeError("File does not exist: {}".format(filepath))
-        assert os.path.isabs(filepath)
+        assert os.path.isabs(filepath), filepath
         value = self.do_compute(filepath)
         return self.create(value, filepath)
 
