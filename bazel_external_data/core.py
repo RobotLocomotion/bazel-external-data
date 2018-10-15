@@ -282,7 +282,7 @@ class Remote(object):
         def download_file_direct(output_file):
             # Assuming we're on Unix (where `os.rename` is atomic), use a
             # tempfile to avoid race conditions.
-            tmp_file = output_file + "-" + str(uuid.uuid4())
+            tmp_file = str(uuid.uuid4())
             try:
                 self._download_file_direct(hash, project_relpath, tmp_file)
             except util.DownloadError as e:
