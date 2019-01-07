@@ -30,9 +30,6 @@ cat > ${bazelrc} <<EOF
 build --python_path=/usr/bin/python3
 EOF
 
-bazel build --announce_rc //...
-exit 10
-
 # Create a new package.
 mkcd data_new
 

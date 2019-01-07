@@ -6,7 +6,7 @@ import unittest
 
 
 def subshell(cmd):
-    return subprocess.check_output(cmd, shell=True).strip()
+    return subprocess.check_output(cmd, shell=True).decode("utf8").strip()
 
 
 expected_files = {
@@ -34,7 +34,7 @@ mock_dir = 'mock'
 class TestBasics(unittest.TestCase):
     def test_files(self):
         # Go through each file and ensure that we have the desired contents.
-        files = subshell("find data -name '*.bin' | sort").decode("utf8")
+        files = subshell("find data -name '*.bin' | sort")
         for file in files.split('\n'):
             with open(file) as f:
                 contents = f.read()

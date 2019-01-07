@@ -108,3 +108,5 @@ except RuntimeError:
     pass
 old_path = base_path + "/sub/path"  # Flat.
 move_items(client, old_path, new_path)
+
+print("[ Done ]")

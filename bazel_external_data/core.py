@@ -134,7 +134,7 @@ class Project(object):
         """Returns a list of relpaths of files contained within the project."""
         output = subprocess.check_output(
             "find '{root}' -name '*.sha512'".format(root=self.root_path),
-            shell=True)
+            shell=True).decode("utf8")
         files = self._frontend.find_registered_file_abspaths(self.root_path)
         if use_relpath:
             return [self._get_relpath(file) for file in files]
@@ -176,7 +176,7 @@ class HashFileFrontend(object):
         output = subprocess.check_output(
             "find '{root}' -name '*{suffix}'".format(
                 root=start_dir, suffix=self._suffix),
-            shell=True)
+            shell=True).decode("utf8")
         return output.strip().split("\n")
 
     def get_hash_file_info(self, input_file, needs_hash):

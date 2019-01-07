@@ -76,7 +76,7 @@ class GirderHashsumBackend(Backend):
         headers = {}
         if self._token:
             headers = {"Girder-Token": self._token}
-        params = {key: json_value(value) for key, value in params.iteritems()}
+        params = {key: json_value(value) for key, value in params.items()}
         func = getattr(requests, method)
         r = func(self._api_url + endpoint, params=params, headers=headers, stream=stream)
         if test:

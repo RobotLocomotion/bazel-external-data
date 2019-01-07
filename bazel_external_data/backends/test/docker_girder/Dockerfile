@@ -5,7 +5,7 @@ FROM node:6
 EXPOSE 8080
 
 RUN apt-get update && \
-  apt-get install -qy software-properties-common python-software-properties && \
+  apt-get install -qy software-properties-common && \
   apt-get update && apt-get install -qy \
     build-essential \
     git \
@@ -23,6 +23,7 @@ RUN git clone https://github.com/girder/girder && \
   git checkout 95cfbec
 
 WORKDIR /girder
+RUN pip install -I six>=1.11  # Dumb...
 RUN pip install -e .[plugins]
 RUN girder-install web --all-plugins
 
