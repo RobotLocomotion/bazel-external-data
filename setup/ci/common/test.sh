@@ -9,9 +9,14 @@ test -f LICENSE
 
 # Configure options.
 ! test -f user.bazelrc
+# Ensure we have a specify Python version.
+# (Not sure if `which python` will carry through.)
+python_bin=$(which python)$(python -c 'import sys; print(sys.version_info.major)')
 cat > user.bazelrc <<EOF
-import %workspace%/setup/ci/common/bazel.rc
+build --python_path=${python_bin}
 EOF
 
 # Run tests.
-bazel test //...
+bazel test \
+    --announce_rc --curses=no --progress_report_interval 30 \
+    //...

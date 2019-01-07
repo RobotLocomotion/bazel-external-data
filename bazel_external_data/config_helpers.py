@@ -9,6 +9,8 @@ import os
 import yaml
 import copy
 
+from six import iteritems
+
 from bazel_external_data import util
 
 
@@ -85,7 +87,7 @@ def merge_config(base_config, new_config, in_place=False):
     if new_config is None:
         return base_config
     # Merge a configuration file.
-    for key, new_value in new_config.iteritems():
+    for key, new_value in iteritems(new_config):
         base_value = base_config.get(key)
         if isinstance(base_value, dict):
             assert isinstance(new_value, dict), \

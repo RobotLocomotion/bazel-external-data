@@ -17,7 +17,15 @@ docker_log=/tmp/docker_girder.output.txt
     sleep 5
 )
 
-bazel build //bazel_external_data/backends:girder_test
+# Setup virtualenv.
+(
+    rm -rf build/
+    mkdir build
+    python3 -m virtualenv --python python3 --system-site-packages ./build
+    build/bin/python3 -m pip install girder_client
+)
+
+bazel build --python_path=${PWD}/build/bin/python3 //bazel_external_data/backends:girder_test
 ws=$(bazel info workspace)
 ${ws}/bazel-bin/bazel_external_data/backends/girder_test ./docker_girder/build/info.yml
 
