@@ -2,11 +2,13 @@
 set -e -u
 set -x
 
+_bazel=$(which bazel)
+
 eecho() { echo "$@" >&2; }
 mkcd() { mkdir -p ${1} && cd ${1}; }
-bazel() { $(which bazel) --bazelrc=${bazelrc} "$@"; }
+bazel() { ${_bazel} --bazelrc=/dev/null "$@"; }
 # For testing, we should be able to both (a) test and (b) run the target.
-bazel-run-and-test() { bazel test --announce_rc "$@"; bazel run "$@"; }
+bazel-run-and-test() { bazel test "$@"; bazel run "$@"; }
 readlink_py() { python -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' ${1}; }
 should_fail() { eecho "Should have failed!"; exit 1; }
 
@@ -24,7 +26,7 @@ pwd
 
 bazelrc=${PWD}/.bazelrc
 
-echo > ${bazelrc} <<EOF
+cat > ${bazelrc} <<EOF
 build --python_path=/usr/bin/python3
 EOF
 
