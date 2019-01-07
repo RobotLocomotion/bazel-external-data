@@ -4,9 +4,9 @@ set -x
 
 eecho() { echo "$@" >&2; }
 mkcd() { mkdir -p ${1} && cd ${1}; }
-bazel() { $(which bazel) --bazelrc=/dev/null "$@"; }
+bazel() { $(which bazel) --bazelrc=${bazelrc} "$@"; }
 # For testing, we should be able to both (a) test and (b) run the target.
-bazel-test() { bazel test "$@"; bazel run "$@"; }
+bazel-run-and-test() { bazel test --announce_rc "$@"; bazel run "$@"; }
 readlink_py() { python -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' ${1}; }
 should_fail() { eecho "Should have failed!"; exit 1; }
 
@@ -21,6 +21,15 @@ upload_dir=${TEST_TMPDIR}/upload_extra
 
 cd $(dirname $0)
 pwd
+
+bazelrc=${PWD}/.bazelrc
+
+echo > ${bazelrc} <<EOF
+build --python_path=/usr/bin/python3
+EOF
+
+bazel build --announce_rc //...
+exit 10
 
 # Create a new package.
 mkcd data_new
@@ -65,7 +74,7 @@ EOF
 bazel build :new.bin
 
 # Ensure that we can run the test with the file in development mode.
-bazel-test :test_basics
+bazel-run-and-test :test_basics
 
 # Ensure that our cache and upload directory is empty.
 [[ ! -d ${cache_dir} ]]
@@ -88,14 +97,14 @@ diff ${upload_file} ./new.bin > /dev/null
 
 # - Change the original, such that it'd fail the test, and ensure failure.
 echo "User changed the file" > ./new.bin
-bazel-test :test_basics && should_fail
+bazel-run-and-test :test_basics && should_fail
 [[ ! -d ${cache_dir} ]]
 
 # Now switch to 'no_cache' mode.
 sed -i 's#mode = "devel",#mode = "no_cache",#g' ./BUILD.bazel
 cat BUILD.bazel
 # Ensure that we can now run the binary with the external data setup.
-bazel-test :test_basics
+bazel-run-and-test :test_basics
 # No cache should have been used.
 [[ ! -d ${cache_dir} ]]
 
@@ -104,7 +113,7 @@ sed -i 's/mode = "no_cache",/# Normal is implicit./g' ./BUILD.bazel
 cat BUILD.bazel
 # - Clean so that we re-trigger a download.
 bazel clean
-bazel-test :test_basics
+bazel-run-and-test :test_basics
 
 # This should have encountered a cache-miss.
 [[ -d ${cache_dir} ]]
@@ -146,7 +155,7 @@ cp expected.txt new.bin
 sed -i 's/# Normal is implicit./mode = "devel",/g' ./BUILD.bazel
 cat ./BUILD.bazel
 # The test should pass.
-bazel-test :test_basics
+bazel-run-and-test :test_basics
 
 # Now upload the newest version (both original file and hash file should work).
 ../tools/external_data upload ./new.bin
@@ -172,7 +181,7 @@ cat ./BUILD.bazel
 
 # Now remove the file. It should still pass the test.
 rm new.bin
-bazel-test :test_basics
+bazel-run-and-test :test_basics
 
 # Download and check the file, but as a symlink now.
 ../tools/external_data download --symlink ./new.bin.sha512
@@ -190,14 +199,14 @@ echo "Corrupted" > ${cache_file}
 diff new.bin expected.txt > /dev/null && should_fail
 # - Bazel should have recognized the write on the internally built file.
 # It will re-trigger a download.
-bazel-test :test_basics
+bazel-run-and-test :test_basics
 # Ensure our symlink is now correct.
 diff new.bin expected.txt > /dev/null
 
 # Remove the cache.
 rm -rf ${cache_dir}
 # - Bazel should have a bad symlink, and should recognize this and re-trigger a download.
-bazel-test :test_basics
+bazel-run-and-test :test_basics
 # - The cache directory should have been re-created.
 [[ -d ${cache_dir} ]]
 
