@@ -17,6 +17,7 @@ docker_log=/tmp/docker_girder.output.txt
     sleep 5
 )
 
+# Setup virtualenv.
 (
     rm -rf build/
     mkdir build
@@ -28,5 +29,5 @@ bazel build --python_path=${PWD}/build/bin/python3 //bazel_external_data/backend
 ws=$(bazel info workspace)
 ${ws}/bazel-bin/bazel_external_data/backends/girder_test ./docker_girder/build/info.yml
 
-set +x
-echo -e "To shutdown:\n  ( cd ${PWD}/docker_girder && docker-compose down )"
+# Shutdown.
+docker-compose down

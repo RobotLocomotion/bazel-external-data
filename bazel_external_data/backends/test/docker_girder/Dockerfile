@@ -23,7 +23,9 @@ RUN git clone https://github.com/girder/girder && \
   git checkout 95cfbec
 
 WORKDIR /girder
-RUN pip install -I six>=1.11  # Dumb...
+# Explicitly install `six` version because deps clash against system-installed
+# version (1.10).
+RUN pip install -I six>=1.11
 RUN pip install -e .[plugins]
 RUN girder-install web --all-plugins
 
