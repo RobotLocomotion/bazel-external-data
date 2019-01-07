@@ -16,10 +16,6 @@ USER_CONFIG_DEFAULT = {
 }
 
 
-import sys
-assert sys.version_info.major == 3
-
-
 def load_project(guess_filepath, project_name=None, user_config_file=None):
     """Loads a project.
     @param guess_filepath
