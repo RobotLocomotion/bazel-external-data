@@ -1,6 +1,9 @@
 #!/bin/bash
 set -eu -o pipefail
 
+# TODO(eric.cousineanu): Propagate --python_path by turning this into a Python
+# script?
+
 # Copy necessary srcs to create a (set of) workspace(s) from an existing Bazel
 # workspace. For testing Bazel workflows.
 
