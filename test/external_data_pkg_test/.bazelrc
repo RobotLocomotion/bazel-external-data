@@ -1,0 +1,2 @@
+# TODO(eric.cousineau): Make configurable?
+build --python_path=/usr/bin/python3

@@ -24,6 +24,12 @@ upload_dir=${TEST_TMPDIR}/upload_extra
 cd $(dirname $0)
 pwd
 
+bazelrc=${PWD}/.bazelrc
+
+cat > ${bazelrc} <<EOF
+build --python_path=/usr/bin/python3
+EOF
+
 # Create a new package.
 mkcd data_new
 
