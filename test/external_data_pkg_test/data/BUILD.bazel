@@ -3,6 +3,7 @@
 load("//tools:external_data.bzl",
     "external_data",
     "external_data_group",
+    "external_data_check_test",
     "extract_archive",
     "get_original_files",
 )
@@ -26,6 +27,11 @@ external_data(
 
 external_data(
     file = "archive.tar.gz",
+)
+
+external_data_check_test(
+    name = "check_only_test",
+    files = ["check_only.bin"],
 )
 
 # Extract tarfile.
