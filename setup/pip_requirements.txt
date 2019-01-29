@@ -1,0 +1,3 @@
+requests >= 2.9.0  # Nominally handled by deb.
+
+# TODO(eric.cousineau): Enable testing of girder.
