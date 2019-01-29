@@ -1,0 +1,4 @@
+# Simplify text output.
+common --curses=no
+# Reduce clutter.
+common --progress_report_interval 30

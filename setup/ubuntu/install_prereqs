@@ -1,0 +1,10 @@
+#!/bin/bash
+set -eux -o pipefail
+
+cur=$(cd $(dirname ${BASH_SOURCE}) && pwd)
+
+# TODO(eric.cousineau): Figure out user-space friendly way of install pip.
+# pip install ${cur}/requirements.txt
+
+echo "Currently unsupported" >&2
+exit 1

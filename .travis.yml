@@ -1,0 +1,16 @@
+---
+os: ubuntu
+dist: xenial
+
+language: python
+python:
+  - "2.7"
+
+branches:
+  only:
+    - master
+
+install:
+  - sudo ./setup/ubuntu/deb_install
+  - pip install -r ./setup/pip_requirements.txt
+script: ./setup/ci/common/test.sh
