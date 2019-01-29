@@ -2,6 +2,7 @@
 load("@bazel_external_data_pkg//:external_data.bzl",
     _external_data="external_data",
     _external_data_group="external_data_group",
+    _external_data_check_test="external_data_check_test",
     "get_original_files",
     "extract_archive",
 )
@@ -27,6 +28,14 @@ def external_data(*args, **kwargs):
 
 def external_data_group(*args, **kwargs):
     _external_data_group(
+        *args,
+        settings = SETTINGS,
+        **kwargs
+    )
+
+
+def external_data_check_test(*args, **kwargs):
+    _external_data_check_test(
         *args,
         settings = SETTINGS,
         **kwargs

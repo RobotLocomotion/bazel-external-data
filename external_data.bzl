@@ -32,7 +32,7 @@ _TOOL = "@bazel_external_data_pkg//:cli"
 _MANIFEST_SUFFIX = ".manifest.bzl"
 
 
-def _get_cli_base_args(filepath, settings):
+def _get_cli_base_args(settings):
     args = []
     # Argument: Verbosity.
     if settings['verbose']:
@@ -93,7 +93,7 @@ def external_data(
         # Binary:
         args = ["$(location {})".format(_TOOL)]
         # General commands.
-        args += _get_cli_base_args(hash_file, settings)
+        args += _get_cli_base_args(settings)
         # Subcommand: Download.
         args.append("download")
         # Argument: Caching.
@@ -135,7 +135,13 @@ def external_data(
 
         if settings['enable_check_test']:
             # Add test.
-            _external_data_check_test(file, settings)
+            external_data_check_test(
+                name = file + _TEST_SUFFIX,
+                files = [file],
+                settings = settings,
+                tags = [],
+                visibility = visibility,
+            )
     else:
         fail("Invalid mode: {}".format(mode))
 
@@ -188,20 +194,29 @@ WARNING: The following `files_devel` files are not in `files`:\n" +
     native.filegroup(
         name = name,
         srcs = all_files,
+        tags = tags,
+        visibility = visibility,
     )
 
 
-def _external_data_check_test(file, settings):
-    # This test merely checks that this file is indeed available on the remote
-    # (ignoring cache).
-    name = file + _TEST_SUFFIX
-    hash_file = file + _HASH_SUFFIX
+def external_data_check_test(
+        name,
+        files,
+        settings,
+        tags = ["check_only"],
+        **kwargs):
+    """
+    Checks that the given files are available on the remote (ignoring cache).
 
-    args = _get_cli_base_args(hash_file, settings)
-    args += [
-        "check",
-        "$(location {})".format(hash_file),
-    ]
+    By default, this is included by `external_data`. If this is not used
+    through `external_data`, then the "no_build" tag will appear by default.
+    """
+    settings = SETTINGS_DEFAULT + settings
+
+    hash_files = [x + _HASH_SUFFIX for x in files]
+
+    args = _get_cli_base_args(settings)
+    args += ["check"] + ["$(location {})".format(x) for x in hash_files]
 
     cli_sentinel = settings['cli_sentinel']
     cli_data = settings['cli_data']
@@ -211,13 +226,14 @@ def _external_data_check_test(file, settings):
     # too cumbersome for general testing.
     native.sh_test(
         name = name,
-        data = [_TOOL, hash_file, cli_sentinel] + cli_data,
+        data = [_TOOL, cli_sentinel] + hash_files + cli_data,
         srcs = ["@bazel_external_data_pkg//:exec.sh"],
         args = ["$(location {})".format(_TOOL)] + args,
-        tags = _TEST_TAGS + ["external"],
+        tags = tags + _TEST_TAGS + ["external"],
         # Changes `execroot`, and symlinks the files that we need to crawl the
         # directory structure and get hierarchical packages.
         local = 1,
+        **kwargs
     )
     return name
 
