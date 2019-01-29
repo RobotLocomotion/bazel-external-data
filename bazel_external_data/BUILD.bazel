@@ -1,0 +1,49 @@
+# -*- python -*-
+
+load("//:expose_all_files.bzl", "expose_all_files")
+
+# Use relative package path, as `py_library` does not like absolute package
+# paths. This ensures that `//src` is added to `PYTHONPATH`.
+imports = [".."]
+
+# @note 'core' has no backends present.
+py_library(
+    name = "core",
+    srcs = [
+        "config_helpers.py",
+        "core.py",
+        "util.py",
+        "hashes.py",
+    ],
+    imports = imports,
+    visibility = ["//visibility:public"],
+)
+
+py_library(
+    name = "cli_base",
+    srcs = [
+        "download.py",
+        "upload.py",
+        "check.py",
+        "squash.py",
+    ],
+    deps = [
+        ":core",
+        "//bazel_external_data/backends",
+    ],
+    imports = imports,
+    visibility = ["//visibility:public"],
+)
+
+# Declare 'cli' in //:, to permit easier access to the binary from external
+# repos.
+exports_files(
+    srcs = ["cli.py"],
+)
+
+alias(
+    name = "cli",
+    actual = "//:cli",
+)
+
+expose_all_files(sub_packages = ["backends"])

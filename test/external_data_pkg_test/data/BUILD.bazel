@@ -1,0 +1,56 @@
+# -*- python -*-
+
+load("//tools:external_data.bzl",
+    "external_data",
+    "external_data_group",
+    "external_data_check_test",
+    "extract_archive",
+    "get_original_files",
+)
+
+load("@bazel_external_data_pkg//:expose_all_files.bzl", "expose_all_files")
+
+package(default_visibility = ["//visibility:public"])
+
+external_data(
+    file = "basic.bin",
+)
+
+external_data_group(
+    name = "glob",
+    files = get_original_files(glob(['glob_*.bin.sha512'])),
+)
+
+external_data(
+    file = "subdir/extra.bin",
+)
+
+external_data(
+    file = "archive.tar.gz",
+)
+
+external_data_check_test(
+    name = "check_only_test",
+    files = ["check_only.bin"],
+)
+
+# Extract tarfile.
+load(":archive.tar.gz.manifest.bzl", archive_manifest="manifest")
+extract_archive(
+    name = "archive",
+    manifest = archive_manifest,
+)
+
+filegroup(
+    name = "data",
+    srcs = [
+        ":basic.bin",
+        ":glob",
+        ":subdir/extra.bin",
+        ":archive",
+    ],
+)
+
+expose_all_files(
+    sub_dirs = ["subdir"],
+)
