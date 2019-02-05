@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eux -o pipefail
+set -eu -o pipefail
 
 # Copy necessary srcs to create a (set of) workspace(s) from an existing Bazel
 # workspace. For testing Bazel workflows.
