@@ -20,21 +20,21 @@ SETTINGS = dict(
 
 def external_data(*args, **kwargs):
     _external_data(
-        *args,
         settings = SETTINGS,
+        *args,
         **kwargs
     )
 
 def external_data_group(*args, **kwargs):
     _external_data_group(
-        *args,
         settings = SETTINGS,
+        *args,
         **kwargs
     )
 
 def external_data_check_test(*args, **kwargs):
     _external_data_check_test(
-        *args,
         settings = SETTINGS,
+        *args,
         **kwargs
     )
