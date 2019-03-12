@@ -12,8 +12,8 @@ py_library(
     srcs = [
         "config_helpers.py",
         "core.py",
-        "util.py",
         "hashes.py",
+        "util.py",
     ],
     imports = imports,
     visibility = ["//visibility:public"],
@@ -22,17 +22,17 @@ py_library(
 py_library(
     name = "cli_base",
     srcs = [
-        "download.py",
-        "upload.py",
         "check.py",
+        "download.py",
         "squash.py",
+        "upload.py",
     ],
+    imports = imports,
+    visibility = ["//visibility:public"],
     deps = [
         ":core",
         "//bazel_external_data/backends",
     ],
-    imports = imports,
-    visibility = ["//visibility:public"],
 )
 
 # Declare 'cli' in //:, to permit easier access to the binary from external

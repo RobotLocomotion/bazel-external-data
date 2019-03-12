@@ -12,10 +12,10 @@ py_library(
         "__init__.py",
         "mock.py",
     ],
+    imports = imports,
     deps = [
         "//bazel_external_data:core",
     ],
-    imports = imports,
 )
 
 py_library(
@@ -26,21 +26,21 @@ py_library(
 
 py_library(
     name = "backends",
+    imports = imports,
+    visibility = ["//bazel_external_data:__subpackages__"],
     deps = [
         ":core",
         ":girder",
     ],
-    imports = imports,
-    visibility = ["//bazel_external_data:__subpackages__"],
 )
 
 py_test(
     name = "girder_test",
     srcs = ["test/girder_test.py"],
+    tags = ["manual"],
     deps = [
         ":girder",
     ],
-    tags = ["manual"],
 )
 
 expose_all_files(sub_dirs = ["test"])

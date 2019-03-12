@@ -11,8 +11,8 @@ external_data_workspace_test(
 
 external_data_workspace_test(
     name = "workflows_test",
-    workspace = "external_data_pkg_test",
     args = ["./workflows_test.sh"],
+    workspace = "external_data_pkg_test",
 )
 
 exports_files(

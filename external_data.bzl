@@ -20,42 +20,43 @@ SETTINGS_DEFAULT = dict(
     enable_check_test = True,
 )
 
-
 _HASH_SUFFIX = ".sha512"
 _RULE_SUFFIX = "__download"
 _RULE_TAG = "external_data"
 _TEST_SUFFIX = "__check_test"
+
 # @note This does NOT include 'external_data', so that running with
 # --test_tag_filters=external_data does not require a remote.
 _TEST_TAGS = ["external_data_check_test"]
 _TOOL = "@bazel_external_data_pkg//:cli"
 _MANIFEST_SUFFIX = ".manifest.bzl"
 
-
 def _get_cli_base_args(settings):
     args = []
+
     # Argument: Verbosity.
-    if settings['verbose']:
+    if settings["verbose"]:
         args.append("--verbose")
+
     # Argument: Project root. Guess from the sentinel file rather than PWD, so
     # that a file could consumed by a downstream Bazel project.
     # (Otherwise, PWD will point to downstream project, which will make a
     # conflict.)
     args.append("--project_root_guess=$(location {})"
-                .format(settings['cli_sentinel']))
+        .format(settings["cli_sentinel"]))
+
     # Extra Arguments (for project settings).
-    cli_extra_args = settings['cli_extra_args']
+    cli_extra_args = settings["cli_extra_args"]
     if cli_extra_args:
         args += cli_extra_args
     return args
 
-
 def external_data(
         file,
-        mode='normal',
-        settings=SETTINGS_DEFAULT,
-        tags=[],
-        visibility=None):
+        mode = "normal",
+        settings = SETTINGS_DEFAULT,
+        tags = [],
+        visibility = None):
     """Defines an external data file.
 
     @param file
@@ -68,36 +69,40 @@ def external_data(
         Settings for target. See `SETTINGS_DEFAULT` for the each setting and
         its purpose.
     """
+
     # Overlay.
     # TODO: Check for invalid settings?
     settings = SETTINGS_DEFAULT + settings
 
-    if mode == 'devel':
+    if mode == "devel":
         # TODO(eric.cousineau): It'd be nice if there is a way to (a) check if
         # there is a `*.sha512` file, and if so, (b) check the hash of the
         # input file.
-        if settings['enable_warn']:
+        if settings["enable_warn"]:
             # TODO(eric.cousineau): Print full location of given file?
             print("\nexternal_data(file = '{}', mode = 'devel'):".format(file) +
                   "\n  Using local workspace file in development mode." +
                   "\n  Please upload this file and commit the *{} file."
-                  .format(_HASH_SUFFIX))
+                      .format(_HASH_SUFFIX))
         native.exports_files(
             srcs = [file],
             visibility = visibility,
         )
-    elif mode in ['normal', 'no_cache']:
+    elif mode in ["normal", "no_cache"]:
         name = file + _RULE_SUFFIX
         hash_file = file + _HASH_SUFFIX
 
         # Binary:
         args = ["$(location {})".format(_TOOL)]
+
         # General commands.
         args += _get_cli_base_args(settings)
+
         # Subcommand: Download.
         args.append("download")
+
         # Argument: Caching.
-        if mode == 'no_cache':
+        if mode == "no_cache":
             args.append("--no_cache")
         else:
             # Use symlinking to avoid needing to copy data to sandboxes.
@@ -105,19 +110,21 @@ def external_data(
             # with `--spawn_strategy=standalone`, there should be a permission
             # error when attempting to write to the file.
             args.append("--symlink")
+
         # Argument: Hash file.
         args.append("$(location {})".format(hash_file))
+
         # Argument: Output file.
         args.append("--output=$@")
 
         cmd = " ".join(args)
 
-        if settings['verbose']:
+        if settings["verbose"]:
             print("\nexternal_data(file = '{}', mode = '{}'):"
-                  .format(file, mode) + "\n  cmd: {}".format(cmd))
+                .format(file, mode) + "\n  cmd: {}".format(cmd))
 
-        cli_sentinel = settings['cli_sentinel']
-        cli_data = settings['cli_data']
+        cli_sentinel = settings["cli_sentinel"]
+        cli_data = settings["cli_data"]
         data = [hash_file, cli_sentinel] + cli_data
 
         native.genrule(
@@ -133,7 +140,7 @@ def external_data(
             visibility = visibility,
         )
 
-        if settings['enable_check_test']:
+        if settings["enable_check_test"]:
             # Add test.
             external_data_check_test(
                 name = file + _TEST_SUFFIX,
@@ -145,22 +152,21 @@ def external_data(
     else:
         fail("Invalid mode: {}".format(mode))
 
-
 def external_data_group(
         name,
         files,
         files_devel = [],
-        mode='normal',
-        tags=[],
-        settings=SETTINGS_DEFAULT,
-        visibility=None):
+        mode = "normal",
+        tags = [],
+        settings = SETTINGS_DEFAULT,
+        visibility = None):
     """Defines a group of external data files. """
 
     # Overlay.
     settings = SETTINGS_DEFAULT + settings
 
-    if settings['enable_warn'] and files_devel and mode == "devel":
-        print('WARNING: You are specifying `files_devel` and ' +
+    if settings["enable_warn"] and files_devel and mode == "devel":
+        print("WARNING: You are specifying `files_devel` and " +
               '`mode="devel"`, which is redundant. Try choosing one.')
 
     kwargs = dict(
@@ -181,7 +187,7 @@ def external_data_group(
         if file not in files:
             devel_only.append(file)
             external_data(file, "devel", **kwargs)
-    if settings['enable_warn'] and devel_only:
+    if settings["enable_warn"] and devel_only:
         print("""
 WARNING: The following `files_devel` files are not in `files`:\n" +
     {}
@@ -197,7 +203,6 @@ WARNING: The following `files_devel` files are not in `files`:\n" +
         tags = tags,
         visibility = visibility,
     )
-
 
 def external_data_check_test(
         name,
@@ -218,8 +223,8 @@ def external_data_check_test(
     args = _get_cli_base_args(settings)
     args += ["check"] + ["$(location {})".format(x) for x in hash_files]
 
-    cli_sentinel = settings['cli_sentinel']
-    cli_data = settings['cli_data']
+    cli_sentinel = settings["cli_sentinel"]
+    cli_data = settings["cli_data"]
 
     # Use `exec.sh` to forward the existing CLI as a test.
     # TODO(eric.cousineau): Consider removing "external" as a test tag if it's
@@ -237,18 +242,16 @@ def external_data_check_test(
     )
     return name
 
-
 def get_original_files(hash_files):
     """Gets the original file from a given hash file. """
     files = []
     for hash_file in hash_files:
         if not hash_file.endswith(_HASH_SUFFIX):
             fail("Hash file does end with '{}': '{}'"
-                 .format(_HASH_SUFFIX, hash_file))
+                .format(_HASH_SUFFIX, hash_file))
         file = hash_file[:-len(_HASH_SUFFIX)]
         files.append(file)
     return files
-
 
 def extract_archive(
         name,
@@ -284,6 +287,7 @@ def extract_archive(
     @param output_dir
         Output directory. If non-empty, must not end with `/`.
     """
+
     # Using: https://groups.google.com/forum/#!topic/bazel-discuss/B5WFlG3co4I
     # TODO(eric.cousineau): Add ability to select specific files of the archive
     # with globs or something (after stripping prefix).
@@ -310,8 +314,8 @@ def extract_archive(
         fail(("archive: There are no outputs, and empty genrule's are " +
               "invalid.\n" +
               "  After `strip_prefix` filtering, there were no outputs, but " +
-               "there were {} original files. Did you use the wrong prefix?")
-              .format(len(manifest["files"])))
+              "there were {} original files. Did you use the wrong prefix?")
+            .format(len(manifest["files"])))
     else:
         output_dir_full = "$(@D)/" + output_dir
     tool = "@bazel_external_data_pkg//:extract_archive"
@@ -334,4 +338,5 @@ def extract_archive(
         outs = outs,
         tools = [tool],
         cmd = cmd,
-        **kwargs)
+        **kwargs
+    )
