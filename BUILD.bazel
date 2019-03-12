@@ -8,11 +8,11 @@ package(default_visibility = ["//visibility:public"])
 py_binary(
     name = "cli",
     srcs = ["//bazel_external_data:cli.py"],
-    deps = [
-        "//bazel_external_data:core",
-        "//bazel_external_data:cli_base",
-    ],
     visibility = ["//visibility:public"],
+    deps = [
+        "//bazel_external_data:cli_base",
+        "//bazel_external_data:core",
+    ],
 )
 
 # Declared for archive stuff (should generally be internal).

@@ -1,13 +1,13 @@
 # -*- python -*-
 
-load("//tools:external_data.bzl",
+load(
+    "//tools:external_data.bzl",
     "external_data",
-    "external_data_group",
     "external_data_check_test",
+    "external_data_group",
     "extract_archive",
     "get_original_files",
 )
-
 load("@bazel_external_data_pkg//:expose_all_files.bzl", "expose_all_files")
 
 package(default_visibility = ["//visibility:public"])
@@ -18,7 +18,7 @@ external_data(
 
 external_data_group(
     name = "glob",
-    files = get_original_files(glob(['glob_*.bin.sha512'])),
+    files = get_original_files(glob(["glob_*.bin.sha512"])),
 )
 
 external_data(
@@ -35,7 +35,8 @@ external_data_check_test(
 )
 
 # Extract tarfile.
-load(":archive.tar.gz.manifest.bzl", archive_manifest="manifest")
+load(":archive.tar.gz.manifest.bzl", archive_manifest = "manifest")
+
 extract_archive(
     name = "archive",
     manifest = archive_manifest,
@@ -44,10 +45,10 @@ extract_archive(
 filegroup(
     name = "data",
     srcs = [
+        ":archive",
         ":basic.bin",
         ":glob",
         ":subdir/extra.bin",
-        ":archive",
     ],
 )
 
