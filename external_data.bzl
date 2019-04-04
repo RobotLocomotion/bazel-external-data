@@ -51,6 +51,11 @@ def _get_cli_base_args(settings):
         args += cli_extra_args
     return args
 
+def _add_dict(a, b):
+    c = dict(a)
+    c.update(b)
+    return c
+
 def external_data(
         file,
         mode = "normal",
@@ -72,7 +77,7 @@ def external_data(
 
     # Overlay.
     # TODO: Check for invalid settings?
-    settings = SETTINGS_DEFAULT + settings
+    settings = _add_dict(SETTINGS_DEFAULT, settings)
 
     if mode == "devel":
         # TODO(eric.cousineau): It'd be nice if there is a way to (a) check if
@@ -163,7 +168,7 @@ def external_data_group(
     """Defines a group of external data files. """
 
     # Overlay.
-    settings = SETTINGS_DEFAULT + settings
+    settings = _add_dict(SETTINGS_DEFAULT, settings)
 
     if settings["enable_warn"] and files_devel and mode == "devel":
         print("WARNING: You are specifying `files_devel` and " +
@@ -216,7 +221,7 @@ def external_data_check_test(
     By default, this is included by `external_data`. If this is not used
     through `external_data`, then the "no_build" tag will appear by default.
     """
-    settings = SETTINGS_DEFAULT + settings
+    settings = _add_dict(SETTINGS_DEFAULT, settings)
 
     hash_files = [x + _HASH_SUFFIX for x in files]
 
