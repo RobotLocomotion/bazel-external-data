@@ -29,6 +29,16 @@ external_data(
     file = "archive.tar.gz",
 )
 
+external_data(
+    file = "executable.bin",
+    executable = True,
+)
+
+sh_binary(
+    name = "executable",
+    srcs = ["executable.bin"],
+)
+
 external_data_check_test(
     name = "check_only_test",
     files = ["check_only.bin"],
@@ -47,6 +57,7 @@ filegroup(
     srcs = [
         ":archive",
         ":basic.bin",
+        ":executable",
         ":glob",
         ":subdir/extra.bin",
     ],
