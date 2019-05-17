@@ -3,6 +3,7 @@ Downloads a file or a set of files for this project.
 """
 
 import os
+import stat
 import sys
 import yaml
 
@@ -31,9 +32,15 @@ def add_arguments(parser):
     parser.add_argument(
         '--symlink', action='store_true',
         help='Use a symlink from the cache rather than copying the file.')
+    parser.add_argument(
+        '--executable', action='store_true',
+        help='Permit execution of downloaded artifact. Cannot be used with '
+             '`--symlink`.')
 
 
 def run(args, project):
+    if args.symlink and args.executable:
+        raise RuntimeError("Cannot use --symlink and --executable!")
     good = True
     if args.output_file:
         if len(args.input_files) != 1:
@@ -81,3 +88,9 @@ def do_download(args, project, info, output_file):
         hash, project_relpath, output_file,
         use_cache=not args.no_cache,
         symlink=args.symlink)
+    if args.executable:
+        if args.verbose:
+            print("Mark as executable: {}".format(output_file))
+        assert not os.path.islink(output_file), output_file
+        mode = os.stat(output_file).st_mode
+        os.chmod(output_file, mode | stat.S_IXUSR)

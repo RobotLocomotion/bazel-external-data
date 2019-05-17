@@ -57,6 +57,10 @@ class TestBasics(unittest.TestCase):
             else:
                 self.assertEqual(contents, mock_contents)
 
+    def test_executable(self):
+        output = subshell("data/executable")
+        self.assertEqual(output, "Hello")
+
 
 if __name__ == '__main__':
     unittest.main()

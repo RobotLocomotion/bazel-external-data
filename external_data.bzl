@@ -61,6 +61,7 @@ def external_data(
         mode = "normal",
         settings = SETTINGS_DEFAULT,
         tags = [],
+        executable = False,
         visibility = None):
     """Defines an external data file.
 
@@ -73,6 +74,8 @@ def external_data(
     @param settings
         Settings for target. See `SETTINGS_DEFAULT` for the each setting and
         its purpose.
+    @param executable
+        If target should be executable.
     """
 
     # Overlay.
@@ -109,12 +112,17 @@ def external_data(
         # Argument: Caching.
         if mode == "no_cache":
             args.append("--no_cache")
+            if executable:
+                args.append("--executable")
         else:
             # Use symlinking to avoid needing to copy data to sandboxes.
             # The cache files are made read-only, so even if a test is run
             # with `--spawn_strategy=standalone`, there should be a permission
             # error when attempting to write to the file.
-            args.append("--symlink")
+            if not executable:
+                args.append("--symlink")
+            else:
+                args.append("--executable")
 
         # Argument: Hash file.
         args.append("$(location {})".format(hash_file))
