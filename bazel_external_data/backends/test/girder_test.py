@@ -34,7 +34,7 @@ parser.add_argument("--num_downloads", type=int, default=1)
 args = parser.parse_args()
 
 with open(args.config_file) as f:
-    config = yaml.load(f)
+    config = yaml.safe_load(f)
 
 url = config["url"]
 base_path = config["folder_path"]
@@ -44,7 +44,7 @@ project_root = "/tmp/bazel_external_data/root"
 output = "/tmp/bazel_external_data/output"
 
 user_config = core.USER_CONFIG_DEFAULT
-user_config.update(yaml.load("""
+user_config.update(yaml.safe_load("""
 girder:
   url:
     "{url}":
@@ -55,7 +55,7 @@ user = core.User(user_config)
 # Indirectly check creation.
 folder_path = base_path + "/sub/path"
 
-config = yaml.load("""
+config = yaml.safe_load("""
 backend: girder_hashsum
 url: {url}
 folder_path: {folder_path}
