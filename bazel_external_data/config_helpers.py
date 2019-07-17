@@ -34,7 +34,7 @@ def find_project_root(guess_filepath, sentinel, project_name):
             else:
                 # Open and read the file to see if we have the desired name.
                 with open(filepath) as f:
-                    config = yaml.load(f)
+                    config = yaml.safe_load(f)
                 return config['project'] == project_name
         else:
             return False
@@ -70,7 +70,7 @@ def parse_config_file(config_file, add_filepath=True):
     @param add_filepath
         Adds `config_file` to the root level for debugging purposes. """
     with open(config_file) as f:
-        config = yaml.load(f)
+        config = yaml.safe_load(f)
     if config is None:
         config = {}
     if add_filepath:
