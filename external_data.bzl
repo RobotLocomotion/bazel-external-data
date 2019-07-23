@@ -266,13 +266,77 @@ def get_original_files(hash_files):
         files.append(file)
     return files
 
+def _get_common_output_dir(attrs, outputs):
+    """Helper for extract_archive().  Returns the single output_dir that is
+    shared by all outputs, given the package-relate attr paths for those
+    outputs.  This is used to populate --output_dir for extract_archive.py.
+    The result does not contain a trailing "/".
+    """
+    (len(attrs) == len(outputs)) or fail("Mismatched lengths")
+    output_dirs = []
+    for i in range(len(attrs)):
+        output_path = outputs[i].path
+        name_within_package = attrs[i].name
+        expected_path_suffix = "/" + name_within_package
+        if not output_path.endswith(expected_path_suffix):
+            fail("Could not strip {} from {} path".format(
+                name_within_package, output_path))
+        output_dir = output_path[:-len(expected_path_suffix)]
+        if output_dir not in output_dirs:
+            output_dirs.append(output_dir)
+    if len(output_dirs) != 1:
+        fail("Could not identify unique output_dir in {}".format(
+            output_dirs))
+    return output_dirs[0]
+
+def _extract_archive_impl(ctx):
+    """The helper rule implementation for extract_archive(), below."""
+    output_root = _get_common_output_dir(ctx.attr.outs, ctx.outputs.outs)
+    args = ctx.actions.args()
+    args.add(ctx.file.archive)
+    args.add("--manifest", ctx.file.manifest)
+    if ctx.attr.output_dir:
+        args.add("--output_dir", output_root + "/" + ctx.attr.output_dir)
+    else:
+        args.add("--output_dir", output_root)
+    args.add("--strip_prefix", ctx.attr.strip_prefix)
+    ctx.actions.run(
+        executable = ctx.executable.tool,
+        tools = [ctx.executable.tool],
+        inputs = [ctx.file.archive, ctx.file.manifest],
+        outputs = ctx.outputs.outs,
+        arguments = [args],
+        mnemonic = "Extract",
+        progress_message = "Extracting {}".format(
+            ctx.file.archive.basename,
+        ),
+    )
+
+# The helper rule declaration for extract_archive(), below.
+_extract_archive_rule = rule(
+    attrs = {
+        "tool": attr.label(
+            default = "@bazel_external_data_pkg//:extract_archive",
+            executable = True,
+            cfg = "host",
+        ),
+        "archive": attr.label(allow_single_file = True, mandatory = True),
+        "manifest": attr.label(allow_single_file = True, mandatory = True),
+        "strip_prefix": attr.string(),
+        "output_dir": attr.string(),
+        "outs": attr.output_list(mandatory = True)
+    },
+    implementation = _extract_archive_impl,
+)
+
 def extract_archive(
         name,
         manifest,
         archive = None,
         strip_prefix = "",
         output_dir = "",
-        **kwargs):
+        tags = None,
+        visibility = None):
     """Extracts an archive into a Bazel genfiles tree.
 
     Example:
@@ -319,37 +383,29 @@ def extract_archive(
             if output_dir:
                 out = output_dir + "/" + out
             outs.append(out)
-    if len(outs) == 1:
-        # See silly rule here for how `@D` changes based on number of outputs:
-        # https://docs.bazel.build/versions/master/be/make-variables.html
-        output_dir_full = "$(@D)"
-    elif len(outs) == 0:
+    if len(outs) == 0:
         fail(("archive: There are no outputs, and empty genrule's are " +
               "invalid.\n" +
               "  After `strip_prefix` filtering, there were no outputs, but " +
               "there were {} original files. Did you use the wrong prefix?")
             .format(len(manifest["files"])))
-    else:
-        output_dir_full = "$(@D)/" + output_dir
-    tool = "@bazel_external_data_pkg//:extract_archive"
-    info = dict(
-        archive_file = archive,
-        tool = tool,
-        output_dir_full = output_dir_full,
-        # Double-load for simplicity.
-        # Alternative: Re-write the data to a temp location.
-        manifest_file = archive + _MANIFEST_SUFFIX,
+    _extract_archive_rule(
+        name = name + ".extract_archive_rule",
+        archive = archive,
+        manifest = archive + _MANIFEST_SUFFIX,
         strip_prefix = strip_prefix,
-    )
-    cmd = ("$(location {tool}) $(location {archive_file}) " +
-           "--manifest $(location {manifest_file}) " +
-           "--output_dir '{output_dir_full}' " +
-           "--strip_prefix '{strip_prefix}'").format(**info)
-    native.genrule(
-        name = name,
-        srcs = [archive, info["manifest_file"]],
+        output_dir = output_dir,
         outs = outs,
-        tools = [tool],
-        cmd = cmd,
-        **kwargs
+        tags = [
+            # Only run the extract_archive_rule when its files are needed;
+            # do not run it as part of `bazel build //...`.
+            "manual",
+        ],
+        visibility = ["//visibility:private"],
+    )
+    native.filegroup(
+        name = name,
+        srcs = outs,
+        tags = tags,
+        visibility = visibility,
     )
