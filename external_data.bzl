@@ -6,16 +6,10 @@ SETTINGS_DEFAULT = dict(
     verbose = False,
     # Sentinel data. Used to detect the project root.
     # WARNING: The sentinel MUST be placed next to the workspace root.
-    # TODO(eric.cousineau): If the logic can be simplified, consider relaxing
-    # this.
+    # TODO(eric.cousineau): Simplify logic and relax this.
     cli_sentinel = "//:external_data_sentinel",
-    # Extra tool data. Generally, this is empty. However, any custom
-    # configuration modules can be included here as well.
-    cli_data = [],
-    # Extra arguments to `cli`. Namely for `--user_config` for mock testing,
-    # but can be changed.
-    # @note This is NOT for arguments after `cli ... download`.
-    cli_extra_args = [],
+    # User configuration file. Namely for mock testing.
+    cli_user_config = None,
     # For each `external_data` target, will add an integrity check for the file.
     enable_check_test = True,
 )
@@ -46,10 +40,17 @@ def _get_cli_base_args(settings):
         .format(settings["cli_sentinel"]))
 
     # Extra Arguments (for project settings).
-    cli_extra_args = settings["cli_extra_args"]
-    if cli_extra_args:
-        args += cli_extra_args
+    cli_user_config = settings["cli_user_config"]
+    if cli_user_config != None:
+        args += ["--user_config=$(location {})".format(cli_user_config)]
     return args
+
+def _get_cli_data(settings):
+    data = [settings["cli_sentinel"]]
+    cli_user_config = settings["cli_user_config"]
+    if cli_user_config != None:
+        data.append(cli_user_config)
+    return data
 
 def _add_dict(a, b):
     c = dict(a)
@@ -136,9 +137,7 @@ def external_data(
             print("\nexternal_data(file = '{}', mode = '{}'):"
                 .format(file, mode) + "\n  cmd: {}".format(cmd))
 
-        cli_sentinel = settings["cli_sentinel"]
-        cli_data = settings["cli_data"]
-        data = [hash_file, cli_sentinel] + cli_data
+        data = _get_cli_data(settings) + [hash_file]
 
         native.genrule(
             name = name,
@@ -236,15 +235,12 @@ def external_data_check_test(
     args = _get_cli_base_args(settings)
     args += ["check"] + ["$(location {})".format(x) for x in hash_files]
 
-    cli_sentinel = settings["cli_sentinel"]
-    cli_data = settings["cli_data"]
-
     # Use `exec.sh` to forward the existing CLI as a test.
     # TODO(eric.cousineau): Consider removing "external" as a test tag if it's
     # too cumbersome for general testing.
     native.sh_test(
         name = name,
-        data = [_TOOL, cli_sentinel] + hash_files + cli_data,
+        data = [_TOOL] + _get_cli_data(settings) + hash_files,
         srcs = ["@bazel_external_data_pkg//:exec.sh"],
         args = ["$(location {})".format(_TOOL)] + args,
         tags = tags + _TEST_TAGS + ["external"],
@@ -409,3 +405,67 @@ def extract_archive(
         tags = tags,
         visibility = visibility,
     )
+
+def external_data_repository_attrs(settings=SETTINGS_DEFAULT):
+    settings = _add_dict(SETTINGS_DEFAULT, settings)
+    # NOTE: all these labels are listed as private attributes to force prefetching, or else
+    # repository rules will be restarted on first hit.
+    # See https://github.com/bazelbuild/bazel/commit/cdc99afc1a03ff8fbbbae088d358b7c029e0d232
+    # and https://github.com/bazelbuild/bazel/issues/4533 for further reference.
+    return {
+        "_cli_sentinel": attr.label(default = settings["cli_sentinel"]),
+        "_cli_user_config": attr.label(default = settings["cli_user_config"]),
+        "_proxy_script": attr.label(default = "@bazel_external_data_pkg//:.external_data_cli_proxy.py"),
+    }
+
+
+def external_data_repository_download(
+        repo_ctx,
+        files,
+        settings=SETTINGS_DEFAULT,
+        python_bin="/usr/bin/python3"):
+    """
+    Provides a mechanism to download external data files as part of a
+    repository rule.
+
+    Arguments:
+        files: Relative paths (to this repository's root) of files to download.
+    """
+    settings = _add_dict(SETTINGS_DEFAULT, settings)
+
+    # For clean up later.
+    files_to_remove = []
+
+    # Add setup files.
+    local_proxy_script = ".external_data_cli_proxy.py"
+    # TODO(eric.cousineau): Symlink all relevant source files for more
+    # robustness.
+    repo_ctx.symlink(repo_ctx.attr._proxy_script, local_proxy_script)
+    files_to_remove.append(local_proxy_script)
+
+    args = [python_bin, local_proxy_script]
+    if settings["verbose"]:
+        args += ["--verbose"]
+
+    # Inject config file so that we can read from it.
+    local_sentinel = ".external_data.yml"
+    repo_ctx.symlink(repo_ctx.attr._cli_sentinel, local_sentinel)
+    files_to_remove.append(local_sentinel)
+    args += ["--project_root_guess=" + local_sentinel]
+
+    if repo_ctx.attr._cli_user_config != None:
+        local_user_config = ".user_config.yml"
+        repo_ctx.symlink(repo_ctx.attr._cli_user_config, local_user_config)
+        files_to_remove.append(local_user_config)
+        args += ["--user_config=" + local_user_config]
+
+    # Download.
+    args += ["download", "--symlink"] + files
+
+    res = repo_ctx.execute(args)
+    if res.return_code != 0:
+        fail("External data failure: {}\n{}".format(res.stdout, res.stderr))
+
+    # Clean up.
+    for file in files_to_remove:
+       repo_ctx.delete(file)
