@@ -36,11 +36,10 @@ apt-get update
 
 apt-get install --no-install-recommends $(cat <<EOF
   wget
-  python-requests
 EOF
 )
 
 dpkg_install_from_wget \
-  bazel 0.25.2 \
-  https://github.com/bazelbuild/bazel/releases/download/0.25.2/bazel_0.25.2-linux-x86_64.deb \
-  7ca3bbec5730afc3732514cbebb1e8f451df455d85d6bed5eb5614c2bfe36f13
+  bazel 1.2.0 \
+  https://github.com/bazelbuild/bazel/releases/download/1.2.0/bazel_1.2.0-linux-x86_64.deb  \
+  640fbbd9d6e6f1bb225929c1b5ffcae650560f8ce1208745acd170451926d190
