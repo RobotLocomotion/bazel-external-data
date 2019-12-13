@@ -23,9 +23,8 @@ toolchain(
     visibility = ["//visibility:public"],
 )
 
-filegroup(
-    name = "external_data_sentinel",
-    srcs = [":.external_data.yml"],
+exports_files(
+    srcs = [".external_data.yml"],
     visibility = ["//:__subpackages__"],
 )
 
@@ -36,6 +35,7 @@ py_test(
     data = [
         "mock",  # Directory.
         "//data",
+        "@repo_archive//:data",
     ],
     visibility = ["//visibility:public"],
 )

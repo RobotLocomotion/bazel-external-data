@@ -17,3 +17,7 @@ local_repository(
     name = "bazel_external_data_pkg",
     path = get_drake_path(__workspace_dir__),
 )
+
+load("//:repo_example.bzl", "add_repo_archive_repository")
+
+add_repo_archive_repository()
