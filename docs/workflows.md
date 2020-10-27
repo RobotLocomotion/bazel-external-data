@@ -7,7 +7,7 @@ test.
 
 1. In your package's `BUILD` file, ensure that you have loaded the appropriate macros:
 
-        load("//tools:external_data.bzl",
+        load("//tools/external_data:external_data.bzl",
             "external_data",
         )
 
