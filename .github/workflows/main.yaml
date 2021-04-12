@@ -1,0 +1,17 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  hello:
+    runs-on: ubuntu-latest
+    steps:
+      - name: nonce
+        run: echo Hello
+        shell: bash
