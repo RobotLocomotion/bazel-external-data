@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 Squash a set of new files from a `head` remote to get the minimal set of new of

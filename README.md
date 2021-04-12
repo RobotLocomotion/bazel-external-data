@@ -5,7 +5,7 @@ zero commitment to backwards compatibility. Documentation may also be stale.**
 
 # Testing
 
-[![Travis CI](https://img.shields.io/travis/com/RobotLocomotion/bazel-external-data/master.svg)](https://travis-ci.com/RobotLocomotion/bazel-external-data)
+![GitHub Actions](https://img.shields.io/github/workflow/status/RobotLocomotion/bazel-external-data/ci/master)
 
 Tested on CI:
 

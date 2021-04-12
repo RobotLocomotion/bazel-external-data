@@ -6,10 +6,10 @@ _bazel=$(which bazel)
 
 eecho() { echo "$@" >&2; }
 mkcd() { mkdir -p ${1} && cd ${1}; }
-bazel() { ${_bazel} --bazelrc=/dev/null "$@"; }
+bazel() { ${_bazel} --nohome_rc "$@"; }
 # For testing, we should be able to both (a) test and (b) run the target.
-bazel-run-and-test() { bazel test "$@"; bazel run "$@"; }
-readlink_py() { python -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' ${1}; }
+bazel-run-and-test() { bazel test --announce_rc "$@"; bazel run --announce_rc "$@"; }
+readlink_py() { python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' ${1}; }
 should_fail() { eecho "Should have failed!"; exit 1; }
 
 # Ensure this is only run with `TEST_TMPDIR` present (called from
