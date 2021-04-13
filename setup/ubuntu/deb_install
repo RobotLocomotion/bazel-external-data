@@ -34,12 +34,55 @@ dpkg_install_from_wget() {
 
 apt-get update
 
+# Ensure we can fetch things and check our system.
 apt-get install --no-install-recommends $(cat <<EOF
+  ca-certificates
+  lsb-release
   wget
 EOF
 )
 
+# Install bazel package dependencies (these may duplicate dependencies of
+# drake).
+apt-get install --no-install-recommends $(cat <<EOF
+g++
+unzip
+zlib1g-dev
+EOF
+)
+
+# Install bazel.
 dpkg_install_from_wget \
-  bazel 1.2.0 \
-  https://github.com/bazelbuild/bazel/releases/download/1.2.0/bazel_1.2.0-linux-x86_64.deb  \
-  640fbbd9d6e6f1bb225929c1b5ffcae650560f8ce1208745acd170451926d190
+  bazel 4.0.0 \
+  https://releases.bazel.build/4.0.0/release/bazel_4.0.0-linux-x86_64.deb \
+  1779ce76ebf449e55dfdd1318355335179eb85609042dfe5c1b4b34683dfd4b5
+
+apt-get install --no-install-recommends lsb-release
+
+codename=$(lsb_release -sc)
+
+# Ensure we can use vanilla Python 3's pip.
+# Install Python 2 because Bazel's wrapper script tends to use `python`?
+# TODO(eric.cousineau): Yuck! Fix this?
+if [[ ${codename} == "bionic" ]]; then
+  apt-get install --no-install-recommends $(cat <<EOF
+libpython-stdlib
+python-minimal
+python3-pip
+EOF
+)
+else
+  apt-get install --no-install-recommends $(cat <<EOF
+libpython2-stdlib
+python-is-python2
+python2-minimal
+python3-pip
+EOF
+)
+fi
+
+# Ensure we can use `sudo`. (See notes in `test.sh`).
+apt-get install --no-install-recommends $(cat <<EOF
+sudo
+EOF
+)

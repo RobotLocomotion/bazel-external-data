@@ -15,7 +15,7 @@ RUN apt-get update && \
     libpython-dev && \
   apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN wget https://bootstrap.pypa.io/get-pip.py && python get-pip.py
+RUN wget https://bootstrap.pypa.io/get-pip.py && python3 get-pip.py
 
 WORKDIR /
 RUN git clone https://github.com/girder/girder && \
@@ -40,4 +40,4 @@ ENV GIRDER_MONGO_URI=$db
 COPY ./files /tmp/files
 COPY ./setup_server.yml /tmp/setup_server.yml
 
-ENTRYPOINT ["python", "-m", "girder"]
+ENTRYPOINT ["python3", "-m", "girder"]

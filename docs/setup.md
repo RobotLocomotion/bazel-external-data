@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-For a basic client, you must have `python` installed.
+For a basic client, you must have `python3` installed.
 
 If you wish to upload files to Girder, have `girder_client` installed.
 For example:

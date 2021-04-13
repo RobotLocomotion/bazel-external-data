@@ -1,3 +1,4 @@
+
 #!/bin/bash
 set -eux -o pipefail
 
@@ -7,16 +8,22 @@ cur=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 test -f WORKSPACE
 test -f LICENSE
 
-# Configure options.
-! test -f user.bazelrc
-# Ensure we have a specify Python version.
-# (Not sure if `which python` will carry through.)
-python_bin=$(which python)$(python -c 'import sys; print(sys.version_info.major)')
-cat > user.bazelrc <<EOF
-build --python_path=${python_bin}
-EOF
+if [[ $(whoami) != "root" ]]; then
+    echo "Should be run under Docker"
+    exit 1;
+fi
+
+if ! id -u test; then
+    useradd -m test
+fi
 
 # Run tests.
+# We `sudo` into a non-root account so that all workflow tests pass; if we
+# were root, then we could nominally overwrite bazel sandbox files.
+sudo -u test --set-home bash <<EOF
+set -eux -o pipefail
+cd ${PWD}
 bazel test \
     --announce_rc --curses=no --progress_report_interval 30 \
     //...
+EOF

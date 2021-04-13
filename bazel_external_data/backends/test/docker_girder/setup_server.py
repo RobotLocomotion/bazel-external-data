@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 import json
@@ -22,7 +22,7 @@ args = parser.parse_args()
 
 # See notes in `Dockerfile`.
 d = dict(container=args.container)
-subshell("docker exec {container} bash -c 'python /girder/tests/setup_database.py /tmp/setup_server.yml'".format(**d))
+subshell("docker exec {container} bash -c 'python3 /girder/tests/setup_database.py /tmp/setup_server.yml'".format(**d))
 
 url = args.url
 auth = b64encode(args.auth)

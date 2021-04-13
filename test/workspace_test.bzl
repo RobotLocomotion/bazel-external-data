@@ -4,9 +4,12 @@
 # https://docs.bazel.build/versions/master/user-manual.html#bazel-releng
 ARGS_DEFAULT = [
     "bazel",
-    "--bazelrc=/dev/null",
+    "--nohome_rc",
     "--batch",
     "test",
+    "--announce_rc",
+     "--test_output=errors",
+     "--test_summary=terse",
     "//...",
 ]
 
