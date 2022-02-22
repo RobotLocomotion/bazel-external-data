@@ -4,6 +4,11 @@ set -eux -o pipefail
 # Adapted from `drake`s `install_prereqs.sh`.
 cur=$(cd $(dirname ${BASH_SOURCE}) && pwd)
 
+die() {
+  echo $@ >&2
+  exit 1
+}
+
 dpkg_install_from_wget() {
   package="$1"
   version="$2"
@@ -53,33 +58,26 @@ EOF
 
 # Install bazel.
 dpkg_install_from_wget \
-  bazel 4.0.0 \
-  https://releases.bazel.build/4.0.0/release/bazel_4.0.0-linux-x86_64.deb \
-  1779ce76ebf449e55dfdd1318355335179eb85609042dfe5c1b4b34683dfd4b5
+  bazel 5.0.0 \
+  https://releases.bazel.build/5.0.0/release/bazel_5.0.0-linux-x86_64.deb \
+  e3361645ccd731abc424bb3a322d8e6f513b7258f5ca11ff04d6067aff5d09b1
 
 apt-get install --no-install-recommends lsb-release
 
 codename=$(lsb_release -sc)
 
 # Ensure we can use vanilla Python 3's pip.
-# Install Python 2 because Bazel's wrapper script tends to use `python`?
-# TODO(eric.cousineau): Yuck! Fix this?
-if [[ ${codename} == "bionic" ]]; then
-  apt-get install --no-install-recommends $(cat <<EOF
-libpython-stdlib
-python-minimal
-python3-pip
-EOF
-)
-else
-  apt-get install --no-install-recommends $(cat <<EOF
-libpython2-stdlib
-python-is-python2
-python2-minimal
-python3-pip
-EOF
-)
+if [[ ${codename} != "focal" ]]; then
+  die "Unsupported Ubuntu version: ${codename}"
 fi
+
+apt-get install --no-install-recommends $(cat <<-EOF
+libpython3-stdlib
+python-is-python3
+python3-minimal
+python3-pip
+EOF
+)
 
 # Ensure we can use `sudo`. (See notes in `test.sh`).
 apt-get install --no-install-recommends $(cat <<EOF
