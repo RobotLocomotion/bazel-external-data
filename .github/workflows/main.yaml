@@ -11,20 +11,6 @@ on:
     - cron: '0 8 * * *'
 
 jobs:
-  ubuntu_bionic:
-    name: ubuntu 18.04 bionic
-    runs-on: ubuntu-latest
-    container: ubuntu:bionic
-    steps:
-      - name: checkout
-        uses: actions/checkout@v2
-      - name: setup
-        run: ./setup/ci/common/install_prereqs.sh
-        shell: bash
-      - name: test
-        run: ./setup/ci/common/test.sh
-        shell: bash
-
   ubuntu_focal:
     name: ubuntu 20.04 focal
     runs-on: ubuntu-latest
