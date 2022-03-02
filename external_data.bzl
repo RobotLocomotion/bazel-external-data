@@ -411,6 +411,9 @@ def extract_archive(
     )
 
 def external_data_repository_attrs(settings=SETTINGS_DEFAULT):
+    """
+    Attributes necessary for `external_data_repository_download()`.
+    """
     settings = _add_dict(SETTINGS_DEFAULT, settings)
     # NOTE: all these labels are listed as private attributes to force prefetching, or else
     # repository rules will be restarted on first hit.
@@ -432,8 +435,33 @@ def external_data_repository_download(
     Provides a mechanism to download external data files as part of a
     repository rule.
 
+    Requires `external_data_repository_attrs()` to have been included in
+    `repository_rule(*, attrs)`.
+
     Arguments:
         files: Relative paths (to this repository's root) of files to download.
+        settings: Project-specific overrides to SETTINGS_DEFAULT.
+        python_bin: Path to Python binary.
+
+    Example:
+
+        def _add_my_repo_impl(repo_ctx):
+            ...
+            external_data_repository_download(repo_ctx, [archive_relpath])
+            repo_ctx.extract(...)
+            repo_ctx.file("BUILD.bazel", ...)
+
+        _my_repo_attrs = {
+            "my_repo_stuff": attr.thing(),
+        }
+        _my_repo_attrs.update(external_data_repository_attrs())
+
+        add_my_repo = repository_rule(
+            implementation = _add_my_repo_impl,
+            local = True,
+            attrs = _my_repo_attrs,
+        )
+
     """
     settings = _add_dict(SETTINGS_DEFAULT, settings)
 
