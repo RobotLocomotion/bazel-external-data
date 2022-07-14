@@ -1,6 +1,7 @@
 from datetime import datetime
 import json
 import os
+
 import requests
 import yaml
 
@@ -8,6 +9,16 @@ from bazel_external_data import util
 from bazel_external_data.core import Backend
 
 # TODO(eric.cousineau): Start using `girder_client` rather than recreating.
+
+
+def resource_lookup_or_none(client, path):
+    try:
+        return client.resourceLookup(path)
+    except requests.HTTPError as e:
+        if e.request.method == "GET" and e.response.status_code == 400:
+            return None
+        else:
+            raise
 
 
 def makedirs(client, root, relpath):
@@ -22,7 +33,7 @@ def makedirs(client, root, relpath):
     # Test which portion of the path exists, and which portion to create.
     while True:
         parent_abspath = (root + "/" + parent_relpath).rstrip('/')
-        parent = client.resourceLookup(parent_abspath, test=True)
+        parent = resource_lookup_or_none(client, parent_abspath)
         if parent or not parent_relpath:
             break
         else:

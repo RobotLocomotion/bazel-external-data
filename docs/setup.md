@@ -5,9 +5,9 @@
 For a basic client, you must have `python3` installed.
 
 If you wish to upload files to Girder, have `girder_client` installed.
-For example:
+For example, in a `venv`:
 
-    pip install --user girder_client
+    pip install girder_client>=3.1.4
 
 ## Configuration
 
