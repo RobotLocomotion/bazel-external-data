@@ -388,6 +388,5 @@ def _get_hash_cache_path(cache_dir, hash, create_dir=True):
     hash_value = hash.get_value()
     out_dir = os.path.join(
         cache_dir, hash_algo, hash_value[0:2], hash_value[2:4])
-    if create_dir and not os.path.isdir(out_dir):
-        os.makedirs(out_dir)
+    os.makedirs(out_dir, exist_ok=True)
     return os.path.join(out_dir, hash_value)

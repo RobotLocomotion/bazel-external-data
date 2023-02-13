@@ -46,8 +46,7 @@ class MockBackend(Backend):
         dest = os.path.join(self._upload_dir, hash.get_value())
         assert not os.path.exists(dest)
         dest_dir = os.path.dirname(dest)
-        if not os.path.isdir(dest_dir):
-            os.makedirs(dest_dir)
+        os.makedirs(dest_dir, exist_ok=True)
         # Copy the file.
         shutil.copy(filepath, dest)
         # Store the SHA.
