@@ -67,10 +67,8 @@ backend = GirderHashsumBackend(config, project_root, user)
 relpath = "test.txt"
 path = os.path.join(project_root, relpath)
 
-if not os.path.exists(project_root):
-    os.makedirs(project_root)
-if not os.path.exists(output):
-    os.makedirs(output)
+os.makedirs(project_root, exist_ok=True)
+os.makedirs(output, exist_ok=True)
 
 for _i in range(args.num_loops):
     print("Outer: {}".format(_i))

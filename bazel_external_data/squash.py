@@ -69,8 +69,7 @@ def run(args, project):
         # upload to `merge`.
         file_stage_abspath = os.path.join(stage_dir, info.project_relpath)
         file_stage_dir = os.path.dirname(file_stage_abspath)
-        if not os.path.exists(file_stage_dir):
-            os.makedirs(file_stage_dir)
+        os.makedirs(file_stage_dir, exist_ok=True)
         head.download_file(
             info.hash, info.project_relpath, file_stage_abspath, symlink=True)
         # Upload file to `merge`.

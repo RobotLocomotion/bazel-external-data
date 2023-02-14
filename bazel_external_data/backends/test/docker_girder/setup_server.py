@@ -70,8 +70,7 @@ if my_plugin not in enabled:
 # To be run by `setup_client.sh`.
 cur_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(cur_dir)
-if not os.path.exists("build"):
-    os.makedirs("build")
+os.makedirs("build", exist_ok=True)
 output_file = "build/info.yml"
 
 with open(output_file, 'w') as f:
