@@ -1,5 +1,7 @@
 # Try to import user-specific configuration local to workspace.
 try-import %workspace%/user.bazelrc
 
+common --enable_bzlmod=false
+
 build --test_output=errors
 build --test_summary=terse

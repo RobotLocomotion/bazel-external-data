@@ -496,6 +496,7 @@ def external_data_repository_download(
 
     res = repo_ctx.execute(args)
     if res.return_code != 0:
+        print("Executing command {}".format(args))
         fail("External data failure: {}\n{}".format(res.stdout, res.stderr))
 
     # Clean up.
