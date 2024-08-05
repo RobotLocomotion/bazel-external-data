@@ -82,5 +82,5 @@ except Exception as e:
         eprint(e)
 
 if status is not None and status is not True:
-    eprint("Encountered error")
+    eprint(f"Encountered error: {status}")
     exit(1)
