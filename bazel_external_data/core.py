@@ -272,7 +272,7 @@ class Remote(object):
         @param symlink
             If `use_cache` is true, this will place a symlink to the read-only
             cache file at `output_file`.
-        @returns 'cache' if there was a cachce hit, 'download' otherwise.
+        @returns 'cache' if there was a cache hit, 'download' otherwise.
         """
         assert os.path.isabs(output_file)
         assert not os.path.exists(output_file)
