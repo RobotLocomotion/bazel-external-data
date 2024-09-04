@@ -3,4 +3,3 @@ try-import %workspace%/user.bazelrc
 
 build --test_output=errors
 build --test_summary=terse
-common --enable_bzlmod=false

@@ -26,6 +26,7 @@ class S3Backend(Backend):
         self._disable_upload = config.get('disable_upload', False)
         self._verbose = config.get('verbose', False)
         self._url = config['url']
+        self._path_prefix = config['folder_path']
 
         # Get (optional) authentication information.
         url_config_node = util.get_chain(
@@ -47,8 +48,13 @@ class S3Backend(Backend):
         else:
             raise RuntimeError(f"Invalid operation {request_type}.")
 
+    def _object_path(self, hash):
+        hash_path = ("" if hash.get_algo() == "sha512"
+                     else f"{hash.get_value()}/")
+        return f"{self._path_prefix}{hash_path}/{hash.get_value()}"
+
     def check_file(self, hash, _project_relpath):
-        path = f"{hash.get_algo()}/{hash.get_value()}"
+        path = self._object_path(hash)
         response = self._send_request('HEAD', path)
         assert (response.status_code in {200, 400, 403}), response.status_code
         return response.status_code == 200
@@ -58,7 +64,7 @@ class S3Backend(Backend):
             raise util.DownloadError(
                 f"File not available '{project_relpath}"
                 f" (hash: {hash.get_value()})")
-        path = f"{hash.get_algo()}/{hash.get_value()}"
+        path = self._object_path(hash)
         response = self._send_request('GET', path)
         if response.status_code == 200:
             with open(output_file, 'wb') as file:
@@ -72,7 +78,7 @@ class S3Backend(Backend):
         if self._disable_upload:
             raise RuntimeError("Upload disabled")
         with open(filepath, 'rb') as file:
-            path = f"{hash.get_algo()}/{hash.get_value()}"
+            path = self._object_path(hash)
             response = self._send_request(
                 'PUT', path, data=file,
                 # These extra headers have no effect on the backend but
