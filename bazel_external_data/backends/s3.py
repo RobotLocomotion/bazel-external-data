@@ -1,6 +1,7 @@
 from datetime import datetime
 import json
 import os
+import time
 
 import requests
 import yaml
@@ -28,6 +29,16 @@ class S3Backend(Backend):
         self._url = config['url']
         self._path_prefix = config['folder_path']
 
+        # Let python `requests` handle retry logic for us if S3 gives us
+        # backpressure (503) or on other less common server errors.
+        self._http = requests.Session()
+        retries = requests.adapters.Retry(
+            total=5,
+            backoff_factor=0.1,
+            status_forcelist=[ 500, 502, 503, 504 ])
+        self._http.mount('https://',
+                         requests.adapters.HTTPAdapter(max_retries=retries))
+
         # Get (optional) authentication information.
         url_config_node = util.get_chain(
             user.config, [self._name, 'url', self._url])
@@ -40,11 +51,11 @@ class S3Backend(Backend):
             print(f"request {request_type} {path}")
             print(f"with headers {headers}")
         if request_type == 'PUT':
-            return requests.put(self._url + path, data=data, headers=headers)
+            return self._http.put(self._url + path, data=data, headers=headers)
         elif request_type == 'GET':
-            return requests.get(self._url + path, headers=headers)
+            return self._http.get(self._url + path, headers=headers)
         elif request_type == 'HEAD':
-            return requests.head(self._url + path, headers=headers)
+            return self._http.head(self._url + path, headers=headers)
         else:
             raise RuntimeError(f"Invalid operation {request_type}.")
 
