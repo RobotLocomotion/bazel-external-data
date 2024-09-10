@@ -1,5 +1,9 @@
 # Try to import user-specific configuration local to workspace.
 try-import %workspace%/user.bazelrc
 
+# We do not yet support bzlmod in this repository; we suppress it to avoid
+# generating spurious module and lock files.
+common --enable_bzlmod=false
+
 # Simple customizations.
 build --test_output=errors --test_summary=terse
