@@ -1,5 +1,4 @@
 from datetime import datetime
-import json
 import os
 import time
 
@@ -34,15 +33,7 @@ class HttpBackend(Backend):
         self._url = config['url']
         self._path_prefix = config['folder_path']
 
-        # Let python `requests` handle retry logic for us if HTTP gives us
-        # backpressure (503) or on other less common server errors.
         self._http = requests.Session()
-        retries = requests.adapters.Retry(
-            total=5,
-            backoff_factor=0.1,
-            status_forcelist=[ 500, 502, 503, 504 ])
-        self._http.mount('https://',
-                         requests.adapters.HTTPAdapter(max_retries=retries))
 
         # Get (optional) authentication information.
         if self._name in user.config:
@@ -52,20 +43,94 @@ class HttpBackend(Backend):
         else:
             self._api_key = config['api_key']
 
-    def _send_request(self, request_type, path, data=None,
-                      extra_headers=None):
-        headers = (extra_headers or {}) | {'Authorization': self._api_key}
+    def _verbose_print(self, text):
         if self._verbose:
-            print(f"request {request_type} {path}")
-            print(f"with headers {headers}")
+            print(text)
+
+    def _send_request_once(self, request_type, path, data=None,
+                           extra_headers=None):
+        headers = (extra_headers or {}) | {'Authorization': self._api_key}
+        self._verbose_print(f"request {request_type} {path}")
+        self._verbose_print(f"with headers {headers}")
         if request_type == 'PUT':
-            return self._http.put(self._url + path, data=data, headers=headers)
+            result = self._http.put(self._url + path,
+                                    data=data, headers=headers)
         elif request_type == 'GET':
-            return self._http.get(self._url + path, headers=headers)
+            result = self._http.get(self._url + path, headers=headers)
         elif request_type == 'HEAD':
-            return self._http.head(self._url + path, headers=headers)
+            result = self._http.head(self._url + path, headers=headers)
         else:
             raise RuntimeError(f"Invalid operation {request_type}.")
+        return result
+
+    def _send_request(self, request_type, path, data=None,
+                      extra_headers=None):
+        # Naively one would use `requests.adapters.HTTPAdapter`'s retry
+        # feature, but the underlying urllib call discards the failed
+        # requests which makes debugging impossible.
+        #
+        # This logic was put in place to debug a complicated failure of
+        # layered timeouts and should not be simplified without great care.
+        retry_statuses = {500, 502, 503, 504}
+
+        # Sometimes retrying queries within the same session doesn't help, so
+        # we also allow one retry of the whole session if all else fails.
+        session_retries = 3
+        response = None
+        while session_retries >= 0:
+            # Try `retries` many times, starting with a delay of `delay` and
+            # increasing it by `backoff_multiplier` with each failure.
+            retries = 11
+            delay = 0.2
+            backoff_multiplier = 1.8
+            # Max delay: delay * multiplier ** (retries - 1)
+            while retries >= 0:
+                response = self._send_request_once(
+                    request_type, path, data, extra_headers)
+                if response.status_code not in retry_statuses:
+                    return response  # Success or irrecoverable failure.
+                if retries > 0:
+                    self._verbose_print(
+                        f"Retrying after {response.status_code}; "
+                        f"{retries} tries remain.")
+                    time.sleep(delay)
+                    delay *= backoff_multiplier
+                retries -= 1
+            if session_retries >= 0:
+                self._verbose_print(
+                    "Too many retries; trying with a new http session.")
+                self._http = requests.Session()
+            session_retries -= 1
+        self._verbose_print("Retries exhausted")
+        return response  # Out of tries; return whatever we've got.
+
+    def _handle_any_error(self, response, success_codes={200}):
+        # If we are in verbose mode, log any partial requests.
+        if self._verbose and len(response.history) > 0:
+            for prior_response in response.history:
+                try:
+                    self._handle_any_error(prior_response)
+                except RuntimeError:
+                    pass
+        if response.status_code not in success_codes:
+            print("Failed to download file. "
+                  f"Status code: {response.status_code}")
+            print("The following information should be included if you open"
+                  " an issue for this failure:")
+            print(yaml.dump({
+                "request": {
+                    "method": response.request.method,
+                    "url": response.request.url,
+                    "headers": dict(response.request.headers)},
+                "response": {
+                    "status": response.status_code,
+                    "reason": response.reason,
+                    "history": response.history,
+                    "headers": dict(response.headers),
+                    "text": response.text[:2000]}}))
+            raise RuntimeError(
+                f"Failed to {response.request.method} file: "
+                f"{response.status_code} ({response.reason})")
 
     def _object_path(self, hash):
         hash_path = ("" if hash.get_algo() == "sha512"
@@ -75,7 +140,8 @@ class HttpBackend(Backend):
     def check_file(self, hash, _project_relpath):
         path = self._object_path(hash)
         response = self._send_request('HEAD', path)
-        assert response.status_code in {200, 400, 403, 404}
+        self._handle_any_error(response,
+                               success_codes={200, 400, 403, 404})
         return response.status_code == 200
 
     def download_file(self, hash, project_relpath, output_file):
@@ -85,13 +151,10 @@ class HttpBackend(Backend):
                 f" (hash: {hash.get_value()})")
         path = self._object_path(hash)
         response = self._send_request('GET', path)
-        if response.status_code == 200:
-            with open(output_file, 'wb') as file:
-                file.write(response.content)
+        self._handle_any_error(response)
+        with open(output_file, 'wb') as file:
+            file.write(response.content)
             print("File downloaded successfully!")
-        else:
-            print("Failed to download file. "
-                  f"Status code: {response.status_code}")
 
     def upload_file(self, hash, project_relpath, filepath):
         if self._disable_upload:
@@ -108,10 +171,5 @@ class HttpBackend(Backend):
                     'x-amz-meta-original-name': os.path.basename(filepath),
                     'x-amz-meta-original-time': datetime.utcnow().isoformat(),
                 })
-            if response.status_code in (200, 201):
-                print("File uploaded successfully!")
-            else:
-                print("Failed to upload file. Status code:",
-                      response.status_code)
-                print(response.headers)
-                print(response.text)
+            self._handle_any_error(response, success_codes={200, 201})
+            print("File uploaded successfully!")
