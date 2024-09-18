@@ -177,7 +177,6 @@ class HttpTest(unittest.TestCase):
         dut.download_file(hashsum, file_in_project, local_file)
         self.assertTrue(os.path.exists(local_file))
 
-
     def test_with_503(self):
         """Same as test_lifecycle, but simulate a backoff request."""
         failure = [503, "Slow Down"]
@@ -205,7 +204,7 @@ class HttpTest(unittest.TestCase):
         with open(local_file, 'w') as test_data_file:
             test_data_file.write(f"Test data: {filename}.\n")
         hashsum = hashes.sha512.compute(local_file)
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(RuntimeError):
             dut.check_file(hashsum, file_in_project)
 
     def tearDown(self):
