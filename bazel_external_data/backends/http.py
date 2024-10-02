@@ -154,7 +154,7 @@ class HttpBackend(Backend):
         self._handle_any_error(response)
         with open(output_file, 'wb') as file:
             file.write(response.content)
-            print("File downloaded successfully!")
+            self._verbose_print("File downloaded successfully!")
 
     def upload_file(self, hash, project_relpath, filepath):
         if self._disable_upload:
