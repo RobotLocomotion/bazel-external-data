@@ -71,12 +71,12 @@ def expose_all_files(
     else:
         package_prefix = "//"  # Root case.
     for name, patterns in _patterns_map.items():
-        srcs = native.glob(patterns)
+        srcs = native.glob(patterns, allow_empty = True)
         for sub_dir in sub_dirs:
             srcs += native.glob([
                 sub_dir + "/**/" + pattern
                 for pattern in patterns
-            ])
+            ], allow_empty = True)
         native.filegroup(
             name = name,
             srcs = srcs,
